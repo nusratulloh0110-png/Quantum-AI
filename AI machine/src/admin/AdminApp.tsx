@@ -16,6 +16,7 @@ const emptyStats: AdminStats = {
   totalAccounts: 0,
   blockedAccounts: 0,
   adminAccounts: 0,
+  subscribedAccounts: 0,
   activeSessions: 0,
   totalBalanceUsd: 0
 };
@@ -27,6 +28,8 @@ interface AccountDraft {
   adminNote: string;
   newPassword: string;
 }
+
+type AdminBadgeTone = "neutral" | "success" | "danger" | "warning" | "navy";
 
 const toDraft = (account: AdminAccount): AccountDraft => ({
   balanceUsd: account.balanceUsd.toFixed(2),
@@ -49,6 +52,44 @@ const getInitials = (account: Pick<AdminAccount, "email" | "name">) => {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+};
+
+const getSubscriptionBadgeText = (account: AdminAccount) => {
+  if (account.billing?.isActive) {
+    return "PRO";
+  }
+
+  const status = account.billing?.status?.trim();
+
+  return status ? status.toUpperCase() : "FREE";
+};
+
+const getSubscriptionBadgeTone = (account: AdminAccount): AdminBadgeTone => {
+  if (account.billing?.isActive) {
+    return "success";
+  }
+
+  return account.billing?.status ? "warning" : "neutral";
+};
+
+const getSubscriptionSourceLabel = (account: AdminAccount) => {
+  if (account.billing?.source === "balance") {
+    return "Баланс $1";
+  }
+
+  if (account.billing?.source === "stripe") {
+    return "Stripe";
+  }
+
+  return "Free";
+};
+
+const getSubscriptionDetailLabel = (account: AdminAccount) => {
+  if (account.billing?.isActive && account.billing.currentPeriodEnd) {
+    return `до ${formatOptionalDate(account.billing.currentPeriodEnd)}`;
+  }
+
+  return getSubscriptionSourceLabel(account);
 };
 
 export const AdminApp = () => {
@@ -120,7 +161,15 @@ export const AdminApp = () => {
     }
 
     return accounts.filter((account) =>
-      [account.email, account.name, account.provider, account.isBlocked ? "blocked" : "active"]
+      [
+        account.email,
+        account.name,
+        account.provider,
+        account.isBlocked ? "blocked" : "active",
+        account.billing?.isActive ? "pro subscribed subscription подписка" : "no sub free нет подписки",
+        account.billing?.status,
+        account.billing?.source
+      ]
         .join(" ")
         .toLowerCase()
         .includes(normalizedQuery)
@@ -243,7 +292,10 @@ export const AdminApp = () => {
               <span className="admin-account-avatar">{getInitials(account)}</span>
               <span className="admin-account-copy">
                 <strong>{account.email}</strong>
-                <small>{formatCurrencyPrecise(account.balanceUsd)}</small>
+                <small>{formatCurrencyPrecise(account.balanceUsd)} · {getSubscriptionSourceLabel(account)}</small>
+              </span>
+              <span className={`admin-account-pro-chip ${account.billing?.isActive ? "admin-account-pro-chip-active" : ""}`}>
+                {account.billing?.isActive ? "PRO" : "FREE"}
               </span>
               <TerminalIcon name={account.isBlocked ? "ban" : "check"} size={15} />
             </button>
@@ -270,6 +322,7 @@ export const AdminApp = () => {
             <div className="flex flex-wrap items-center gap-2">
               <h1>Аккаунты</h1>
               <Badge tone="navy">admin.{window.location.hostname.replace(/^admin\./, "")}</Badge>
+              <Badge tone="success">{stats.subscribedAccounts} PRO</Badge>
               <Badge tone={stats.blockedAccounts > 0 ? "warning" : "success"}>{stats.blockedAccounts} blocked</Badge>
             </div>
             <p>
@@ -286,7 +339,7 @@ export const AdminApp = () => {
         </header>
 
         <div className="content-region admin-content">
-          <div className="grid gap-4 xl:grid-cols-4">
+          <div className="admin-metric-grid">
             <section className="metric-card">
               <div className="metric-card-label">Аккаунты</div>
               <div className="metric-card-value">{stats.totalAccounts}</div>
@@ -298,6 +351,12 @@ export const AdminApp = () => {
               <div className="metric-card-value">{formatCurrencyPrecise(stats.totalBalanceUsd)}</div>
               <div className="metric-card-detail">Суммарный баланс аккаунтов</div>
               <TerminalIcon name="dollar" className="mt-4 text-emeraldStrict" size={20} />
+            </section>
+            <section className="metric-card metric-card-success">
+              <div className="metric-card-label">PRO</div>
+              <div className="metric-card-value">{stats.subscribedAccounts}</div>
+              <div className="metric-card-detail">Активная подписка $1 / месяц</div>
+              <TerminalIcon name="credit" className="mt-4 text-emeraldStrict" size={20} />
             </section>
             <section className="metric-card">
               <div className="metric-card-label">Блокировки</div>
@@ -328,6 +387,7 @@ export const AdminApp = () => {
                     <tr>
                       <th>Account</th>
                       <th>Balance</th>
+                      <th>Subscription</th>
                       <th>Status</th>
                       <th>Provider</th>
                       <th>Positions</th>
@@ -351,6 +411,12 @@ export const AdminApp = () => {
                         </td>
                         <td className="font-mono">{formatCurrencyPrecise(account.balanceUsd)}</td>
                         <td>
+                          <div className="admin-subscription-cell">
+                            <Badge tone={getSubscriptionBadgeTone(account)}>{getSubscriptionBadgeText(account)}</Badge>
+                            <small>{getSubscriptionDetailLabel(account)}</small>
+                          </div>
+                        </td>
+                        <td>
                           <Badge tone={account.isBlocked ? "danger" : "success"}>{account.isBlocked ? "Blocked" : "Active"}</Badge>
                         </td>
                         <td>{account.provider}</td>
@@ -368,9 +434,12 @@ export const AdminApp = () => {
               <section className="panel admin-editor">
                 <div className="panel-header">
                   <h2>Управление аккаунтом</h2>
-                  <Badge tone={selectedAccount.isAdmin ? "navy" : selectedAccount.isBlocked ? "danger" : "success"}>
-                    {selectedAccount.isAdmin ? "Admin" : selectedAccount.isBlocked ? "Blocked" : "Active"}
-                  </Badge>
+                  <div className="admin-editor-badges">
+                    <Badge tone={getSubscriptionBadgeTone(selectedAccount)}>{getSubscriptionBadgeText(selectedAccount)}</Badge>
+                    <Badge tone={selectedAccount.isAdmin ? "navy" : selectedAccount.isBlocked ? "danger" : "success"}>
+                      {selectedAccount.isAdmin ? "Admin" : selectedAccount.isBlocked ? "Blocked" : "Active"}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="admin-profile">
@@ -378,6 +447,10 @@ export const AdminApp = () => {
                   <div>
                     <h3>{selectedAccount.email}</h3>
                     <p>{selectedAccount.name}</p>
+                    <div className={`admin-profile-billing ${selectedAccount.billing?.isActive ? "admin-profile-billing-active" : ""}`}>
+                      <span>{getSubscriptionBadgeText(selectedAccount)}</span>
+                      <small>{getSubscriptionSourceLabel(selectedAccount)}</small>
+                    </div>
                   </div>
                 </div>
 
@@ -441,6 +514,18 @@ export const AdminApp = () => {
                 </label>
 
                 <dl className="admin-account-meta">
+                  <div>
+                    <dt>Подписка</dt>
+                    <dd>{getSubscriptionBadgeText(selectedAccount)}</dd>
+                  </div>
+                  <div>
+                    <dt>Источник</dt>
+                    <dd>{getSubscriptionSourceLabel(selectedAccount)}</dd>
+                  </div>
+                  <div>
+                    <dt>Период до</dt>
+                    <dd>{formatOptionalDate(selectedAccount.billing?.currentPeriodEnd)}</dd>
+                  </div>
                   <div>
                     <dt>Создан</dt>
                     <dd>{formatOptionalDate(selectedAccount.createdAt)}</dd>

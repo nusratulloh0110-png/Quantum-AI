@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import type { ManualPortfolioPosition, PortfolioSnapshot } from "../domain/portfolio/types";
 import { LocalAuthClient } from "../infrastructure/auth/LocalAuthClient";
 import type { AuthUser } from "../infrastructure/auth/LocalAuthClient";
@@ -42,6 +43,7 @@ const marketDataProvider = new LocalMarketDataProvider();
 const repository = new LocalPortfolioRepository();
 const authClient = new LocalAuthClient();
 const monthlySubscriptionPriceUsd = 1;
+const freePlanAssetLimit = 10;
 
 const hasBillingAccess = (user: AuthUser | null): boolean => {
   const status = user?.billing?.status ?? "";
@@ -212,30 +214,130 @@ interface BillingRequiredScreenProps {
 const BillingRequiredScreen = ({ user, language, isLoading, error, onStripe, onBalance, onRefresh, onLogout }: BillingRequiredScreenProps) => {
   const isRu = language === "ru";
   const canUseBalance = user.balanceUsd >= monthlySubscriptionPriceUsd;
+  const featureItems: Array<{ icon: TerminalIconName; title: string; body: string }> = isRu
+    ? [
+        {
+          icon: "portfolio",
+          title: "Контроль портфеля",
+          body: "Видно вес каждого актива, цену, 24h-движение, концентрацию и отклонение от целевых весов."
+        },
+        {
+          icon: "assets",
+          title: "Ввод активов",
+          body: "Можно вручную задать позиции, CoinGecko ID, количество и быстро получить расчёт по реальному портфелю."
+        },
+        {
+          icon: "market",
+          title: "Рыночный контур",
+          body: "Поиск активов, цены, ранги и дневное движение подтягиваются через market-data слой."
+        },
+        {
+          icon: "quantum",
+          title: "QAOA-оптимизация",
+          body: "Локальный квантовый расчёт ищет более сбалансированное распределение между риском, корреляцией и весами."
+        },
+        {
+          icon: "execution",
+          title: "План ребаланса",
+          body: "Терминал показывает BUY/SELL/HOLD-сигналы и объясняет, что именно нужно изменить перед исполнением."
+        },
+        {
+          icon: "message",
+          title: "AI-разбор",
+          body: "Аналитический помощник объясняет риск, просадку, сильные отклонения и результат расчёта простым языком."
+        }
+      ]
+    : [
+        {
+          icon: "portfolio",
+          title: "Portfolio control",
+          body: "Track asset weights, live prices, 24h movement, concentration and target-weight drift."
+        },
+        {
+          icon: "assets",
+          title: "Asset input",
+          body: "Enter holdings, CoinGecko IDs and amounts manually to calculate from the real account portfolio."
+        },
+        {
+          icon: "market",
+          title: "Market layer",
+          body: "Search assets, inspect prices, ranks and daily movement through the market-data layer."
+        },
+        {
+          icon: "quantum",
+          title: "QAOA optimization",
+          body: "The local quantum run searches for a better risk, covariance and allocation balance."
+        },
+        {
+          icon: "execution",
+          title: "Rebalance plan",
+          body: "The terminal produces BUY/SELL/HOLD signals and explains what should change before execution."
+        },
+        {
+          icon: "message",
+          title: "AI analysis",
+          body: "The advisor explains risk, drawdown, allocation drift and model output in plain language."
+        }
+      ];
+  const valueItems = isRu
+    ? [
+        ["Экономия времени", "не собирать цены, веса и сигналы вручную"],
+        ["Меньше ошибок", "ребаланс виден до действия, а не после просадки"],
+        ["Дисциплина риска", "видно, где портфель перегружен одним активом"],
+        ["Понятная цена", "$1 в месяц, можно списать с баланса"]
+      ]
+    : [
+        ["Time saved", "no manual price, weight and signal collection"],
+        ["Fewer mistakes", "rebalance is visible before drawdown pain"],
+        ["Risk discipline", "see where the portfolio is overloaded"],
+        ["Clear pricing", "$1 per month, payable from balance"]
+      ];
 
   return (
     <main className="billing-required-shell">
       <section className="billing-required-panel">
-        <div className="billing-required-head">
-          <LogoMark />
-          <div>
-            <h1>{isRu ? "Нужна подписка" : "Subscription required"}</h1>
-            <p>
-              {isRu
-                ? "Терминал активируется после месячной подписки."
-                : "The terminal unlocks after a monthly subscription."}
-            </p>
+        <div className="billing-hero">
+          <div className="billing-required-head">
+            <LogoMark />
+            <div>
+              <span className="billing-kicker">TRADING FLOOR ACCESS</span>
+              <h1>{isRu ? "Quantum-AI Wealth Guardian" : "Quantum-AI Wealth Guardian"}</h1>
+              <p>
+                {isRu
+                  ? "Профессиональный терминал для контроля риска, ребаланса и квантового расчёта портфеля. Он не обещает гарантированную прибыль, но помогает видеть, где деньги перегружены риском и где можно действовать дисциплинированнее."
+                  : "A professional terminal for risk control, rebalance planning and quantum portfolio calculations. It does not promise guaranteed profit, but helps reveal where capital is overloaded with risk and where action can be more disciplined."}
+              </p>
+            </div>
+          </div>
+
+          <div className="billing-visual" aria-hidden="true">
+            <div className="billing-chart-head">
+              <span>RISK</span>
+              <strong>96 → 84</strong>
+            </div>
+            <svg className="billing-line-chart" viewBox="0 0 320 140">
+              <path className="billing-grid-line" d="M10 35H310M10 70H310M10 105H310" />
+              <path className="billing-risk-line" d="M12 28 C58 24 80 72 124 67 S182 108 226 78 S268 42 308 54" />
+              <path className="billing-target-line" d="M12 94 C64 88 94 82 132 76 S210 64 308 42" />
+            </svg>
+            <div className="billing-bars">
+              <span style={{ "--bar": "82%" } as CSSProperties} />
+              <span style={{ "--bar": "56%" } as CSSProperties} />
+              <span style={{ "--bar": "38%" } as CSSProperties} />
+              <span style={{ "--bar": "22%" } as CSSProperties} />
+            </div>
           </div>
         </div>
 
-        <div className="billing-price-readout">
-          <span>{isRu ? "Стоимость" : "Price"}</span>
-          <strong>$1.00 / {isRu ? "месяц" : "month"}</strong>
-        </div>
-
-        <div className="billing-balance-readout">
-          <span>{isRu ? "Внутренний баланс" : "Internal balance"}</span>
-          <strong>{formatCurrencyPrecise(user.balanceUsd)}</strong>
+        <div className="billing-deal-row">
+          <div className="billing-price-readout">
+            <span>{isRu ? "Стоимость" : "Price"}</span>
+            <strong>$1.00 / {isRu ? "месяц" : "month"}</strong>
+          </div>
+          <div className="billing-balance-readout">
+            <span>{isRu ? "Ваш баланс" : "Your balance"}</span>
+            <strong>{formatCurrencyPrecise(user.balanceUsd)}</strong>
+          </div>
         </div>
 
         {error ? <div className="auth-error">{error}</div> : null}
@@ -257,6 +359,43 @@ const BillingRequiredScreen = ({ user, language, isLoading, error, onStripe, onB
             <TerminalIcon name="logout" size={17} />
             <span>{isRu ? "Выйти" : "Logout"}</span>
           </button>
+        </div>
+
+        <div className="billing-feature-grid">
+          {featureItems.map((item) => (
+            <article className="billing-feature-card" key={item.title}>
+              <TerminalIcon name={item.icon} size={18} />
+              <h2>{item.title}</h2>
+              <p>{item.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="billing-value-panel">
+          <div>
+            <h2>{isRu ? "В чём профит" : "Where it helps"}</h2>
+            <p>
+              {isRu
+                ? "Главная польза не в красивом графике, а в экономии внимания: терминал собирает рыночные данные, считает риск и показывает план до того, как решение станет дорогой ошибкой."
+                : "The value is not decoration. The terminal saves attention by collecting market data, calculating risk and showing a plan before a decision becomes an expensive mistake."}
+            </p>
+          </div>
+          <div className="billing-value-list">
+            {valueItems.map(([title, body]) => (
+              <div key={title}>
+                <span>{title}</span>
+                <strong>{body}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="billing-tech-strip">
+          <span>CoinGecko market data</span>
+          <span>QUBO / QAOA local engine</span>
+          <span>Risk scoring</span>
+          <span>AI analytics</span>
+          <span>Stripe / balance billing</span>
         </div>
 
         {!canUseBalance ? (
@@ -288,7 +427,7 @@ export const App = () => {
   const hasActiveSubscription = hasBillingAccess(authUser);
 
   const loadSnapshot = useCallback(async () => {
-    if (!authUser || authUser.isBlocked || !hasActiveSubscription || !isPortfolioReady) {
+    if (!authUser || authUser.isBlocked || !isPortfolioReady) {
       setSnapshot(null);
       setIsRefreshing(false);
       return;
@@ -308,11 +447,22 @@ export const App = () => {
       setSnapshot(nextSnapshot);
       setLoadError(null);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "Failed to load portfolio snapshot.");
+      const rawMessage = error instanceof Error ? error.message : "Failed to load portfolio snapshot.";
+      const isFreePlanLimit = rawMessage.toLowerCase().includes("free plan");
+      const message =
+        isFreePlanLimit && language === "ru"
+          ? `FREE план включает до ${freePlanAssetLimit} активов. Удалите лишние строки или включите PRO.`
+          : rawMessage;
+      setLoadError(message);
+
+      if (isFreePlanLimit) {
+        setActiveView("setup");
+        setSnapshot(buildEmptySnapshot());
+      }
     } finally {
       setIsRefreshing(false);
     }
-  }, [authUser, hasActiveSubscription, isPortfolioReady, manualPositions]);
+  }, [authUser, isPortfolioReady, language, manualPositions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -342,7 +492,7 @@ export const App = () => {
   }, []);
 
   const loadAccountPositions = useCallback(async () => {
-    if (!authUser || authUser.isBlocked || !hasActiveSubscription) {
+    if (!authUser || authUser.isBlocked) {
       setManualPositions([]);
       setIsPortfolioReady(false);
       setSnapshot(null);
@@ -364,10 +514,10 @@ export const App = () => {
       setLoadError(error instanceof Error ? error.message : "Failed to load account assets.");
       setIsPortfolioReady(false);
     }
-  }, [authUser, hasActiveSubscription]);
+  }, [authUser]);
 
   useEffect(() => {
-    if (!authUser || authUser.isBlocked || !hasActiveSubscription) {
+    if (!authUser || authUser.isBlocked) {
       setManualPositions([]);
       setIsPortfolioReady(false);
       setSnapshot(null);
@@ -375,7 +525,7 @@ export const App = () => {
     }
 
     void loadAccountPositions();
-  }, [authUser, hasActiveSubscription, loadAccountPositions]);
+  }, [authUser, loadAccountPositions]);
 
   useEffect(() => {
     if (!authUser || !isPortfolioReady) {
@@ -435,6 +585,12 @@ export const App = () => {
         await authClient.openBillingPortal();
       } else if (hasActiveSubscription) {
         setBillingError("Подписка активна.");
+      } else if ((authUser?.balanceUsd ?? 0) >= monthlySubscriptionPriceUsd) {
+        await authClient.startBalanceSubscription();
+        const user = await authClient.getCurrentUser();
+        setAuthUser(user);
+        setIsPortfolioReady(false);
+        setSnapshot(null);
       } else {
         await authClient.startBillingCheckout();
       }
@@ -484,21 +640,6 @@ export const App = () => {
 
   if (authUser.isBlocked) {
     return <BlockedAccountScreen user={authUser} language={language} onLogout={handleLogout} onRefresh={handleRefreshAccount} />;
-  }
-
-  if (!hasActiveSubscription) {
-    return (
-      <BillingRequiredScreen
-        user={authUser}
-        language={language}
-        isLoading={isBillingLoading}
-        error={billingError}
-        onStripe={handleBillingAction}
-        onBalance={handleBalanceSubscription}
-        onRefresh={handleRefreshAccount}
-        onLogout={handleLogout}
-      />
-    );
   }
 
   if (!snapshot) {
@@ -558,11 +699,31 @@ export const App = () => {
               EN
             </button>
           </div>
+          <div
+            className={`sidebar-plan-badge ${hasActiveSubscription ? "sidebar-plan-badge-pro" : "sidebar-plan-badge-free"}`}
+            title={
+              hasActiveSubscription
+                ? authUser.billing?.customerId
+                  ? "Stripe PRO active"
+                  : "Balance PRO active"
+                : `FREE plan: ${freePlanAssetLimit} assets`
+            }
+          >
+            {hasActiveSubscription ? "PRO" : "FREE"}
+          </div>
           <button
             aria-label={hasActiveSubscription && authUser.billing?.customerId ? "Manage billing" : "Start billing"}
             className="sidebar-icon-button"
             disabled={isBillingLoading}
-            title={hasActiveSubscription && !authUser.billing?.customerId ? "Balance subscription active" : hasActiveSubscription ? "Billing" : "Connect billing"}
+            title={
+              hasActiveSubscription && !authUser.billing?.customerId
+                ? "Balance subscription active"
+                : hasActiveSubscription
+                  ? "Billing"
+                  : authUser.balanceUsd >= monthlySubscriptionPriceUsd
+                    ? "Activate PRO from balance"
+                    : "Connect billing"
+            }
             type="button"
             onClick={() => void handleBillingAction()}
           >
@@ -586,6 +747,9 @@ export const App = () => {
             <div className="topbar-title-row">
               <h1>{activeTitle}</h1>
               <Badge tone="navy">SIGMA-3</Badge>
+              <Badge tone={hasActiveSubscription ? "success" : "warning"}>
+                {hasActiveSubscription ? "PRO" : `FREE ${manualPositions.length}/${freePlanAssetLimit}`}
+              </Badge>
               <Badge tone={snapshot.marketData.status === "live" ? "success" : snapshot.marketData.status === "partial" ? "warning" : "danger"}>
                 {t.prices}: {snapshot.marketData.status}
               </Badge>
@@ -616,8 +780,18 @@ export const App = () => {
         </header>
 
         <div className="content-region">
+          {loadError ? <div className="status-banner status-banner-warning">{loadError}</div> : null}
           {activeView === "dashboard" ? <Dashboard snapshot={snapshot} language={language} /> : null}
-          {activeView === "setup" ? <PortfolioSetup language={language} positions={manualPositions} onSave={handlePositionsSave} /> : null}
+          {activeView === "setup" ? (
+            <PortfolioSetup
+              freeAssetLimit={freePlanAssetLimit}
+              isPro={hasActiveSubscription}
+              language={language}
+              positions={manualPositions}
+              onSave={handlePositionsSave}
+              onUpgrade={() => void handleBillingAction()}
+            />
+          ) : null}
           {activeView === "universe" ? <AssetUniverse marketDataProvider={marketDataProvider} language={language} /> : null}
           {activeView === "quantum" ? <QuantumLab snapshot={snapshot} language={language} /> : null}
           {activeView === "execution" ? <ExecutionDesk snapshot={snapshot} /> : null}

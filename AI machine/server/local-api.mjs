@@ -5,7 +5,7 @@ import { URL } from "node:url";
 import { createAuthService } from "./auth.mjs";
 import { createAdminStore } from "./adminStore.mjs";
 import { createPostgresDatabase } from "./postgres.mjs";
-import { createPortfolioStore } from "./portfolioStore.mjs";
+import { createPortfolioStore, normalizePortfolioPositions } from "./portfolioStore.mjs";
 import { createQuantumRunStore } from "./quantumRunStore.mjs";
 import { createStripeBillingService } from "./stripeBilling.mjs";
 import { loadLocalEnv } from "./env.mjs";
@@ -24,6 +24,10 @@ const priceCache = new Map();
 const searchCache = new Map();
 const staticRoot = resolve(process.cwd(), "dist");
 const maxJsonBodyBytes = 1_000_000;
+const configuredFreePlanAssetLimit = Number(process.env.FREE_PLAN_ASSET_LIMIT ?? 10);
+const freePlanAssetLimit = Number.isFinite(configuredFreePlanAssetLimit) && configuredFreePlanAssetLimit > 0
+  ? Math.floor(configuredFreePlanAssetLimit)
+  : 10;
 const db = await createPostgresDatabase();
 const authService = createAuthService({ port, db });
 const adminStore = createAdminStore({ db });
@@ -129,14 +133,6 @@ const isAdminHost = (requestUrl) => {
 const isBlockedAccountAllowedPath = (pathname) =>
   pathname === "/api/auth/me" || pathname === "/api/auth/logout" || pathname === "/api/account/status";
 
-const isSubscriptionAllowedPath = (pathname) =>
-  pathname === "/api/auth/me" ||
-  pathname === "/api/auth/logout" ||
-  pathname === "/api/auth/config" ||
-  pathname === "/api/account/status" ||
-  pathname.startsWith("/api/billing/") ||
-  pathname.startsWith("/api/admin/");
-
 const hasActiveSubscription = (user) => {
   const status = user?.billing?.status ?? "";
 
@@ -147,6 +143,37 @@ const hasActiveSubscription = (user) => {
   const periodEnd = user?.billing?.currentPeriodEnd;
 
   return !periodEnd || Number.isNaN(Date.parse(periodEnd)) || Date.parse(periodEnd) > Date.now();
+};
+
+const isProAccount = (user) => Boolean(user?.isAdmin) || hasActiveSubscription(user);
+
+const buildFreePlanLimitPayload = (assetCount) => ({
+  error: `Free plan supports up to ${freePlanAssetLimit} assets. Upgrade to PRO to add more.`,
+  subscriptionRequired: true,
+  plan: "free",
+  freePlanLimit: freePlanAssetLimit,
+  assetCount,
+  monthlyPriceUsd: 1
+});
+
+const getFreePlanPositionsLimitPayload = (user, positions) => {
+  if (isProAccount(user)) {
+    return null;
+  }
+
+  const assetCount = normalizePortfolioPositions(positions).length;
+
+  return assetCount > freePlanAssetLimit ? buildFreePlanLimitPayload(assetCount) : null;
+};
+
+const getFreePlanAssetsLimitPayload = (user, assets) => {
+  if (isProAccount(user)) {
+    return null;
+  }
+
+  const assetCount = Array.isArray(assets) ? assets.length : 0;
+
+  return assetCount > freePlanAssetLimit ? buildFreePlanLimitPayload(assetCount) : null;
 };
 
 const buildCoinGeckoUrl = (path, params = {}) => {
@@ -547,15 +574,7 @@ const routeRequest = async (request, response) => {
       return;
     }
 
-    if (!session.user.isAdmin && !hasActiveSubscription(session.user) && !isSubscriptionAllowedPath(requestUrl.pathname)) {
-      sendJson(response, 402, {
-        error: "Subscription required.",
-        subscriptionRequired: true,
-        monthlyPriceUsd: 1,
-        balanceUsd: session.user.balanceUsd
-      });
-      return;
-    }
+    // Free accounts can use the terminal, but portfolio size is capped by route-level checks.
   }
 
   if (request.method === "GET" && requestUrl.pathname === "/api/account/status") {
@@ -645,6 +664,13 @@ const routeRequest = async (request, response) => {
   ) {
     const session = await getRequestSession();
     const body = await readJsonBody(request);
+    const freePlanLimitPayload = getFreePlanPositionsLimitPayload(session.user, body.positions ?? []);
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
     const positions = await portfolioStore.replacePositions(session.user.id, body.positions ?? []);
     sendJson(response, 200, { positions });
     return;
@@ -653,6 +679,13 @@ const routeRequest = async (request, response) => {
   if (request.method === "GET" && requestUrl.pathname === "/api/portfolio/snapshot") {
     const session = await getRequestSession();
     const positions = await portfolioStore.listPositions(session.user.id);
+    const freePlanLimitPayload = getFreePlanPositionsLimitPayload(session.user, positions);
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
     const result = await buildPortfolioSnapshot({ getCoinPrices, positions });
     sendJson(response, 200, result);
     return;
@@ -661,9 +694,25 @@ const routeRequest = async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/portfolio/snapshot") {
     const session = await getRequestSession();
     const body = await readJsonBody(request);
+    const freePlanLimitPayload = Array.isArray(body.positions)
+      ? getFreePlanPositionsLimitPayload(session.user, body.positions)
+      : null;
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
     const positions = Array.isArray(body.positions)
       ? await portfolioStore.replacePositions(session.user.id, body.positions)
       : await portfolioStore.listPositions(session.user.id);
+    const storedFreePlanLimitPayload = getFreePlanPositionsLimitPayload(session.user, positions);
+
+    if (storedFreePlanLimitPayload) {
+      sendJson(response, 402, storedFreePlanLimitPayload);
+      return;
+    }
+
     const result = await buildPortfolioSnapshot({ getCoinPrices, positions });
     sendJson(response, 200, result);
     return;
@@ -673,7 +722,16 @@ const routeRequest = async (request, response) => {
     request.method === "POST" &&
     requestUrl.pathname === "/api/analytics/chat"
   ) {
+    const session = await getRequestSession();
     const body = await readJsonBody(request);
+    const snapshotAssets = Array.isArray(body.snapshot?.assets) ? body.snapshot.assets : [];
+    const freePlanLimitPayload = getFreePlanAssetsLimitPayload(session.user, snapshotAssets);
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
     const result = await askGroq(String(body.question ?? ""), body.snapshot, body.language === "ru" ? "ru" : "en");
     sendJson(response, 200, result);
     return;
@@ -682,7 +740,15 @@ const routeRequest = async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/quantum/latest") {
     const session = await getRequestSession();
     const body = await readJsonBody(request);
-    const result = await quantumRunStore.getLatestRun(session.user.id, body.assets ?? []);
+    const assets = Array.isArray(body.assets) ? body.assets : [];
+    const freePlanLimitPayload = getFreePlanAssetsLimitPayload(session.user, assets);
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
+    const result = await quantumRunStore.getLatestRun(session.user.id, assets);
     sendJson(response, 200, { task: result });
     return;
   }
@@ -690,8 +756,16 @@ const routeRequest = async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/quantum/optimize") {
     const session = await getRequestSession();
     const body = await readJsonBody(request);
-    const result = simulateLocalQaoa(body.assets ?? []);
-    await quantumRunStore.saveRun(session.user.id, body.assets ?? [], result);
+    const assets = Array.isArray(body.assets) ? body.assets : [];
+    const freePlanLimitPayload = getFreePlanAssetsLimitPayload(session.user, assets);
+
+    if (freePlanLimitPayload) {
+      sendJson(response, 402, freePlanLimitPayload);
+      return;
+    }
+
+    const result = simulateLocalQaoa(assets);
+    await quantumRunStore.saveRun(session.user.id, assets, result);
     sendJson(response, 200, result);
     return;
   }

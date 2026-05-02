@@ -5,9 +5,12 @@ import { Badge } from "../components/Badge";
 import { TerminalIcon } from "../components/TerminalIcon";
 
 interface PortfolioSetupProps {
+  freeAssetLimit?: number;
+  isPro?: boolean;
   language: Language;
   positions: ManualPortfolioPosition[];
   onSave: (positions: ManualPortfolioPosition[]) => Promise<void> | void;
+  onUpgrade?: () => void;
 }
 
 const emptyPosition: ManualPortfolioPosition = {
@@ -17,10 +20,22 @@ const emptyPosition: ManualPortfolioPosition = {
   amount: 0
 };
 
-export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupProps) => {
+export const PortfolioSetup = ({
+  freeAssetLimit = 10,
+  isPro = false,
+  language,
+  positions,
+  onSave,
+  onUpgrade
+}: PortfolioSetupProps) => {
   const [draft, setDraft] = useState<ManualPortfolioPosition[]>(positions.length > 0 ? positions : [emptyPosition]);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const planLabel = isPro ? "PRO" : `FREE ${draft.length}/${freeAssetLimit}`;
+  const freeLimitMessage =
+    language === "ru"
+      ? `FREE план включает до ${freeAssetLimit} активов. Удалите лишние строки или включите PRO за $1 в месяц.`
+      : `The FREE plan includes up to ${freeAssetLimit} assets. Remove extra rows or activate PRO for $1 per month.`;
 
   useEffect(() => {
     setDraft(positions.length > 0 ? positions : [emptyPosition]);
@@ -29,6 +44,15 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
   const copy = (nextPositions: ManualPortfolioPosition[]) => {
     setValidationError(null);
     setDraft(nextPositions.length > 0 ? nextPositions : [emptyPosition]);
+  };
+
+  const handleAddPosition = () => {
+    if (!isPro && draft.length >= freeAssetLimit) {
+      setValidationError(freeLimitMessage);
+      return;
+    }
+
+    copy([...draft, emptyPosition]);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -45,6 +69,11 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
 
     if (cleaned.length === 0) {
       setValidationError(language === "ru" ? "Добавьте хотя бы один актив с положительным количеством." : "Add at least one asset with a positive amount.");
+      return;
+    }
+
+    if (!isPro && cleaned.length > freeAssetLimit) {
+      setValidationError(freeLimitMessage);
       return;
     }
 
@@ -65,13 +94,31 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
       <section className="panel">
         <div className="panel-header">
           <h2>{language === "ru" ? "Ваш портфель" : "Your Portfolio"}</h2>
-          <Badge tone="navy">{language === "ru" ? "Реальные данные" : "Real data"}</Badge>
+          <div className="panel-badge-row">
+            <Badge tone={isPro ? "success" : "warning"}>{planLabel}</Badge>
+            <Badge tone="navy">{language === "ru" ? "Реальные данные" : "Real data"}</Badge>
+          </div>
         </div>
         <p className="mb-4 max-w-3xl text-sm leading-6 text-slate-600">
           {language === "ru"
             ? "Введите активы, CoinGecko ID и количество. Система использует эти данные для живых цен, риск-метрик и ручного запуска QAOA-расчета."
             : "Enter assets, CoinGecko IDs and amounts. The system uses these values for live prices, risk metrics and manual QAOA runs."}
         </p>
+        {!isPro ? (
+          <div className="plan-limit-note">
+            <strong>FREE</strong>
+            <span>
+              {language === "ru"
+                ? `До ${freeAssetLimit} активов в аккаунте. PRO снимает этот лимит и стоит $1 в месяц.`
+                : `Up to ${freeAssetLimit} assets per account. PRO removes this limit and costs $1 per month.`}
+            </span>
+            {onUpgrade ? (
+              <button type="button" onClick={onUpgrade}>
+                {language === "ru" ? "Включить PRO" : "Activate PRO"}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         {validationError ? <div className="status-banner status-banner-warning mb-4">{validationError}</div> : null}
 
         <form onSubmit={handleSubmit}>
@@ -157,7 +204,7 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" className="secondary-button" onClick={() => copy([...draft, emptyPosition])} disabled={isSaving}>
+            <button type="button" className="secondary-button" onClick={handleAddPosition} disabled={isSaving}>
               <TerminalIcon name="plus" size={16} />
               <span>{language === "ru" ? "Добавить актив" : "Add asset"}</span>
             </button>

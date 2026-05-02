@@ -22,6 +22,39 @@ const toNumber = (value) => {
 
 const cleanText = (value, maxLength) => String(value ?? "").trim().slice(0, maxLength);
 
+const internalBalancePriceId = "internal_balance_monthly_1_usd";
+const activeSubscriptionStatuses = new Set(["active", "trialing"]);
+
+const isSubscriptionActive = (row) => {
+  const status = String(row?.stripe_subscription_status ?? "").toLowerCase();
+
+  if (!activeSubscriptionStatuses.has(status)) {
+    return false;
+  }
+
+  const periodEnd = row?.stripe_current_period_end;
+
+  if (!periodEnd) {
+    return true;
+  }
+
+  const periodEndTimestamp = new Date(periodEnd).getTime();
+
+  return Number.isNaN(periodEndTimestamp) || periodEndTimestamp > Date.now();
+};
+
+const getSubscriptionSource = (row) => {
+  if (row?.stripe_price_id === internalBalancePriceId) {
+    return "balance";
+  }
+
+  if (row?.stripe_customer_id || row?.stripe_subscription_id) {
+    return "stripe";
+  }
+
+  return "none";
+};
+
 const validatePassword = (password) => {
   const text = String(password ?? "");
 
@@ -64,6 +97,7 @@ const normalizeAccountRow = (row) => {
   }
 
   const configuredAdmins = parseAdminEmails();
+  const subscriptionActive = isSubscriptionActive(row);
 
   return {
     id: row.id,
@@ -80,6 +114,15 @@ const normalizeAccountRow = (row) => {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lastLoginAt: row.last_login_at,
+    billing: {
+      customerId: row.stripe_customer_id ?? null,
+      subscriptionId: row.stripe_subscription_id ?? null,
+      status: row.stripe_subscription_status ?? null,
+      priceId: row.stripe_price_id ?? null,
+      currentPeriodEnd: row.stripe_current_period_end ?? null,
+      isActive: subscriptionActive,
+      source: getSubscriptionSource(row)
+    },
     positionsCount: Number(row.positions_count ?? 0),
     activeSessions: Number(row.active_sessions ?? 0),
     lastAuthEventAt: row.last_auth_event_at
@@ -134,6 +177,7 @@ export const createAdminStore = ({ db }) => {
           totalAccounts: accounts.length,
           blockedAccounts: accounts.filter((account) => account.isBlocked).length,
           adminAccounts: accounts.filter((account) => account.isAdmin).length,
+          subscribedAccounts: accounts.filter((account) => account.billing.isActive).length,
           activeSessions: accounts.reduce((sum, account) => sum + account.activeSessions, 0),
           totalBalanceUsd
         }

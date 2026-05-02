@@ -15,6 +15,15 @@ export interface AdminAccount {
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string | null;
+  billing?: {
+    customerId?: string | null;
+    subscriptionId?: string | null;
+    status?: string | null;
+    priceId?: string | null;
+    currentPeriodEnd?: string | null;
+    isActive: boolean;
+    source: "stripe" | "balance" | "none";
+  };
   positionsCount: number;
   activeSessions: number;
   lastAuthEventAt?: string | null;
@@ -24,6 +33,7 @@ export interface AdminStats {
   totalAccounts: number;
   blockedAccounts: number;
   adminAccounts: number;
+  subscribedAccounts: number;
   activeSessions: number;
   totalBalanceUsd: number;
 }
@@ -47,6 +57,15 @@ export interface UpdateAccountPatch {
   newPassword?: string;
 }
 
+const emptyStats: AdminStats = {
+  totalAccounts: 0,
+  blockedAccounts: 0,
+  adminAccounts: 0,
+  subscribedAccounts: 0,
+  activeSessions: 0,
+  totalBalanceUsd: 0
+};
+
 const readApiJson = async <T extends { error?: string }>(response: Response): Promise<T> => {
   const data = (await response.json().catch(() => ({}))) as T;
 
@@ -66,14 +85,10 @@ export class AdminClient {
 
     return {
       accounts: data.accounts ?? [],
-      stats:
-        data.stats ?? {
-          totalAccounts: 0,
-          blockedAccounts: 0,
-          adminAccounts: 0,
-          activeSessions: 0,
-          totalBalanceUsd: 0
-        }
+      stats: {
+        ...emptyStats,
+        ...(data.stats ?? {})
+      }
     };
   }
 

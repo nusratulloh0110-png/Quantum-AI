@@ -156,6 +156,7 @@ textarea {
 .market-ticker,
 .sidebar-build,
 .sidebar-live,
+.sidebar-plan-badge,
 .language-button,
 .asset-symbol,
 .asset-name,
@@ -164,6 +165,9 @@ textarea {
 .terminal-log,
 .admin-account-meta dd,
 .admin-account-copy small,
+.admin-account-pro-chip,
+.admin-subscription-cell,
+.admin-profile-billing,
 .admin-profile-avatar,
 .admin-account-avatar,
 .admin-search input {
@@ -282,6 +286,29 @@ textarea {
 }
 
 .language-button-active {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.sidebar-plan-badge {
+  display: grid;
+  min-width: 36px;
+  min-height: 22px;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1;
+}
+
+.sidebar-plan-badge-pro {
+  border: 1px solid rgba(76, 175, 116, 0.35);
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.sidebar-plan-badge-free {
+  border: 1px solid var(--amber-line);
   background: var(--amber-dim);
   color: var(--amber);
 }
@@ -648,6 +675,66 @@ textarea {
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+}
+
+.panel-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.panel-header .terminal-badge-amber {
+  color: var(--amber);
+}
+
+.panel-header .terminal-badge-success {
+  color: var(--green);
+}
+
+.panel-header .terminal-badge-warning {
+  color: var(--amber);
+}
+
+.plan-limit-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  border: 1px solid var(--amber-line);
+  background: var(--amber-dim);
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.plan-limit-note strong {
+  color: var(--amber);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.plan-limit-note span {
+  min-width: 220px;
+  flex: 1;
+}
+
+.plan-limit-note button {
+  border: 1px solid var(--amber-line);
+  background: #090909;
+  padding: 6px 9px;
+  color: var(--amber);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.plan-limit-note button:hover {
+  background: var(--bg-raised);
 }
 
 .status-banner {
@@ -1489,31 +1576,150 @@ textarea {
 
 .billing-required-panel {
   display: grid;
-  gap: 16px;
-  width: min(100%, 560px);
+  gap: 18px;
+  width: min(100%, 1080px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.billing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 24px;
+  align-items: stretch;
 }
 
 .billing-required-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
+}
+
+.billing-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--amber);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
 }
 
 .billing-required-head h1 {
   margin: 0;
   color: var(--text-primary);
   font-family: "Bebas Neue", sans-serif;
-  font-size: 28px;
+  font-size: clamp(32px, 5vw, 56px);
   font-weight: 400;
   letter-spacing: 0.08em;
+  line-height: 0.95;
 }
 
 .billing-required-head p,
 .billing-required-note {
   margin: 4px 0 0;
   color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.billing-visual {
+  position: relative;
+  display: grid;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid var(--bd-default);
+  background:
+    linear-gradient(90deg, rgba(232, 160, 48, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(232, 160, 48, 0.035) 1px, transparent 1px),
+    #090909;
+  background-size: 24px 24px;
+  padding: 18px;
+}
+
+.billing-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.billing-chart-head strong {
+  color: var(--red);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.billing-line-chart {
+  align-self: center;
+  width: 100%;
+  height: 150px;
+}
+
+.billing-grid-line,
+.billing-risk-line,
+.billing-target-line {
+  fill: none;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.billing-grid-line {
+  stroke: var(--bd-default);
+  stroke-width: 1;
+}
+
+.billing-risk-line {
+  stroke: var(--red);
+  stroke-width: 2;
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  animation: billingLineDraw 1.1s ease forwards;
+}
+
+.billing-target-line {
+  stroke: rgba(76, 175, 116, 0.62);
+  stroke-width: 2;
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  animation: billingLineDraw 1.1s ease 220ms forwards;
+}
+
+.billing-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  height: 54px;
+}
+
+.billing-bars span {
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, var(--amber) var(--bar), var(--bd-default) var(--bar));
+  animation: billingBarIn 720ms ease both;
+}
+
+.billing-bars span:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.billing-bars span:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.billing-bars span:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+.billing-deal-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .billing-price-readout,
@@ -1547,6 +1753,123 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.billing-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.billing-feature-card {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 178px;
+  border: 1px solid var(--bd-default);
+  background: #090909;
+  padding: 16px;
+  color: var(--amber);
+  animation: fadeRow 360ms ease both;
+}
+
+.billing-feature-card:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.billing-feature-card:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.billing-feature-card:nth-child(4) {
+  animation-delay: 210ms;
+}
+
+.billing-feature-card:nth-child(5) {
+  animation-delay: 280ms;
+}
+
+.billing-feature-card:nth-child(6) {
+  animation-delay: 350ms;
+}
+
+.billing-feature-card h2,
+.billing-value-panel h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.billing-feature-card p,
+.billing-value-panel p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.billing-value-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  gap: 18px;
+  border: 1px solid var(--bd-default);
+  background: var(--bg-raised);
+  padding: 18px;
+}
+
+.billing-value-panel > div:first-child {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.billing-value-list {
+  display: grid;
+  gap: 8px;
+}
+
+.billing-value-list div {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 14px;
+  border-bottom: 1px solid var(--bd-subtle);
+  padding: 0 0 8px;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.billing-value-list span {
+  color: var(--amber);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.billing-value-list strong {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.billing-tech-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.billing-tech-strip span {
+  border: 1px solid var(--bd-default);
+  background: #090909;
+  padding: 6px 9px;
+  color: var(--text-muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .auth-brand-row {
@@ -1777,10 +2100,37 @@ textarea {
   font-weight: 500;
 }
 
+.admin-account-pro-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  border: 1px solid var(--bd-default);
+  background: transparent;
+  padding: 3px 5px;
+  color: var(--text-muted);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+.admin-account-pro-chip-active {
+  border-color: rgba(76, 175, 116, 0.35);
+  background: var(--green-dim);
+  color: var(--green);
+}
+
 .admin-content {
   display: grid;
   gap: 16px;
   padding: 16px;
+}
+
+.admin-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .admin-workspace {
@@ -1794,6 +2144,10 @@ textarea {
   overflow: hidden;
 }
 
+.admin-data-table {
+  min-width: 980px;
+}
+
 .admin-data-table tbody tr {
   cursor: pointer;
 }
@@ -1802,9 +2156,29 @@ textarea {
   background: var(--amber-dim);
 }
 
+.admin-subscription-cell {
+  display: grid;
+  gap: 5px;
+  justify-items: start;
+}
+
+.admin-subscription-cell small {
+  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
 .admin-editor {
   display: grid;
   gap: 14px;
+}
+
+.admin-editor-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .admin-profile {
@@ -1831,6 +2205,25 @@ textarea {
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 12px;
+}
+
+.admin-profile-billing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+  color: var(--text-muted);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-profile-billing span {
+  color: var(--text-muted);
+}
+
+.admin-profile-billing-active span {
+  color: var(--green);
 }
 
 .admin-toggle-row {
@@ -2013,6 +2406,23 @@ textarea {
   }
 }
 
+@keyframes billingLineDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes billingBarIn {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
 @keyframes riskRingDraw {
   from {
     stroke-dashoffset: 264;
@@ -2143,9 +2553,20 @@ textarea {
 
   .quantum-process-grid,
   .guide-grid,
+  .billing-feature-grid,
+  .billing-value-panel,
   .quantum-recommendation-grid,
   .admin-workspace {
     grid-template-columns: 1fr;
+  }
+
+  .billing-hero,
+  .billing-deal-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2225,6 +2646,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .admin-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
   .portfolio-grid {
     min-height: auto;
   }
@@ -2241,5 +2666,28 @@ textarea {
 
   .blocked-account-grid {
     grid-template-columns: 1fr;
+  }
+
+  .billing-required-panel {
+    max-height: none;
+    width: min(100%, 100%);
+  }
+
+  .billing-required-head {
+    flex-direction: column;
+  }
+
+  .billing-visual {
+    min-height: 220px;
+  }
+
+  .billing-value-list div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .billing-required-actions .primary-button,
+  .billing-required-actions .secondary-button {
+    width: 100%;
   }
 }
