@@ -1,3 +1,9 @@
+import { pbkdf2Sync, randomBytes } from "node:crypto";
+
+const PASSWORD_ITERATIONS = 310000;
+const PASSWORD_KEY_LENGTH = 64;
+const PASSWORD_DIGEST = "sha512";
+
 const nowIso = () => new Date().toISOString();
 
 const parseAdminEmails = () =>
@@ -15,6 +21,42 @@ const toNumber = (value) => {
 };
 
 const cleanText = (value, maxLength) => String(value ?? "").trim().slice(0, maxLength);
+
+const validatePassword = (password) => {
+  const text = String(password ?? "");
+
+  if (text.length < 10) {
+    const error = new Error("Password must be at least 10 characters long.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!/[a-z]/i.test(text) || !/[0-9]/.test(text)) {
+    const error = new Error("Password must include letters and numbers.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (text.length > 256) {
+    const error = new Error("Password is too long.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return text;
+};
+
+const hashPassword = (password) => {
+  const salt = randomBytes(32);
+  const hash = pbkdf2Sync(password, salt, PASSWORD_ITERATIONS, PASSWORD_KEY_LENGTH, PASSWORD_DIGEST);
+
+  return {
+    password_hash: hash.toString("hex"),
+    password_salt: salt.toString("hex"),
+    password_iterations: PASSWORD_ITERATIONS,
+    password_digest: PASSWORD_DIGEST
+  };
+};
 
 const normalizeAccountRow = (row) => {
   if (!row) {
@@ -114,6 +156,8 @@ export const createAdminStore = ({ db }) => {
       const hasBlocked = Object.prototype.hasOwnProperty.call(patch, "isBlocked");
       const hasReason = Object.prototype.hasOwnProperty.call(patch, "blockedReason");
       const hasAdminNote = Object.prototype.hasOwnProperty.call(patch, "adminNote");
+      const nextPassword = String(patch.newPassword ?? "");
+      const hasPassword = nextPassword.length > 0;
       const balanceUsd = hasBalance ? Number(patch.balanceUsd) : toNumber(current.account_balance_usd);
 
       if (!Number.isFinite(balanceUsd) || balanceUsd < 0 || balanceUsd > 9999999999999999) {
@@ -131,26 +175,60 @@ export const createAdminStore = ({ db }) => {
         : null;
       const adminNote = hasAdminNote ? cleanText(patch.adminNote, 1000) : current.admin_note;
       const updatedAt = nowIso();
+      const passwordFields = hasPassword ? hashPassword(validatePassword(nextPassword)) : null;
 
-      await db.query(
-        `UPDATE users
-         SET account_balance_usd = $1,
-             is_blocked = $2,
-             blocked_reason = $3,
-             blocked_at = $4,
-             admin_note = $5,
-             updated_at = $6
-         WHERE id = $7`,
-        [
-          balanceUsd.toFixed(2),
-          isBlocked,
-          isBlocked ? blockedReason : null,
-          blockedAt,
-          adminNote,
-          updatedAt,
-          accountId
-        ]
-      );
+      if (passwordFields) {
+        await db.transaction(async (tx) => {
+          await tx.query(
+            `UPDATE users
+             SET account_balance_usd = $1,
+                 is_blocked = $2,
+                 blocked_reason = $3,
+                 blocked_at = $4,
+                 admin_note = $5,
+                 password_hash = $6,
+                 password_salt = $7,
+                 password_iterations = $8,
+                 password_digest = $9,
+                 updated_at = $10
+             WHERE id = $11`,
+            [
+              balanceUsd.toFixed(2),
+              isBlocked,
+              isBlocked ? blockedReason : null,
+              blockedAt,
+              adminNote,
+              passwordFields.password_hash,
+              passwordFields.password_salt,
+              passwordFields.password_iterations,
+              passwordFields.password_digest,
+              updatedAt,
+              accountId
+            ]
+          );
+          await tx.query("UPDATE auth_sessions SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL", [updatedAt, accountId]);
+        });
+      } else {
+        await db.query(
+          `UPDATE users
+           SET account_balance_usd = $1,
+               is_blocked = $2,
+               blocked_reason = $3,
+               blocked_at = $4,
+               admin_note = $5,
+               updated_at = $6
+           WHERE id = $7`,
+          [
+            balanceUsd.toFixed(2),
+            isBlocked,
+            isBlocked ? blockedReason : null,
+            blockedAt,
+            adminNote,
+            updatedAt,
+            accountId
+          ]
+        );
+      }
 
       return getAccount(accountId);
     }

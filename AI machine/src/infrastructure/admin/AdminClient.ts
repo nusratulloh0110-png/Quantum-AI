@@ -44,6 +44,7 @@ export interface UpdateAccountPatch {
   isBlocked?: boolean;
   blockedReason?: string;
   adminNote?: string;
+  newPassword?: string;
 }
 
 const readApiJson = async <T extends { error?: string }>(response: Response): Promise<T> => {

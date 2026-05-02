@@ -25,13 +25,15 @@ interface AccountDraft {
   isBlocked: boolean;
   blockedReason: string;
   adminNote: string;
+  newPassword: string;
 }
 
 const toDraft = (account: AdminAccount): AccountDraft => ({
   balanceUsd: account.balanceUsd.toFixed(2),
   isBlocked: account.isBlocked,
   blockedReason: account.blockedReason ?? "",
-  adminNote: account.adminNote ?? ""
+  adminNote: account.adminNote ?? "",
+  newPassword: ""
 });
 
 const formatOptionalDate = (value?: string | null) => (value ? formatDateTime(value) : "—");
@@ -166,13 +168,14 @@ export const AdminApp = () => {
         balanceUsd: Number(draft.balanceUsd),
         isBlocked: draft.isBlocked,
         blockedReason: draft.blockedReason,
-        adminNote: draft.adminNote
+        adminNote: draft.adminNote,
+        newPassword: draft.newPassword.trim() || undefined
       });
       setAccounts((currentAccounts) =>
         currentAccounts.map((account) => (account.id === updated.id ? updated : account))
       );
       setDraft(toDraft(updated));
-      setNotice("Аккаунт обновлен.");
+      setNotice(draft.newPassword.trim() ? "Аккаунт и пароль обновлены." : "Аккаунт обновлен.");
       void loadAccounts();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "Не удалось сохранить аккаунт.");
@@ -420,6 +423,21 @@ export const AdminApp = () => {
                     value={draft.adminNote}
                     onChange={(event) => setDraft((current) => (current ? { ...current, adminNote: event.target.value } : current))}
                   />
+                </label>
+
+                <label className="auth-field">
+                  <span>Новый пароль</span>
+                  <div>
+                    <TerminalIcon name="key" size={16} />
+                    <input
+                      autoComplete="new-password"
+                      minLength={10}
+                      type="password"
+                      value={draft.newPassword}
+                      onChange={(event) => setDraft((current) => (current ? { ...current, newPassword: event.target.value } : current))}
+                    />
+                  </div>
+                  <small>Оставьте пустым, если пароль менять не нужно. Минимум 10 символов, буквы и цифры.</small>
                 </label>
 
                 <dl className="admin-account-meta">

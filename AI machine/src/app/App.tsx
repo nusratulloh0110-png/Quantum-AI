@@ -41,6 +41,19 @@ const navItems: NavItem[] = [
 const marketDataProvider = new LocalMarketDataProvider();
 const repository = new LocalPortfolioRepository();
 const authClient = new LocalAuthClient();
+const monthlySubscriptionPriceUsd = 1;
+
+const hasBillingAccess = (user: AuthUser | null): boolean => {
+  const status = user?.billing?.status ?? "";
+
+  if (!["active", "trialing"].includes(status)) {
+    return false;
+  }
+
+  const periodEnd = user?.billing?.currentPeriodEnd;
+
+  return !periodEnd || Number.isNaN(Date.parse(periodEnd)) || Date.parse(periodEnd) > Date.now();
+};
 
 const buildEmptySnapshot = (): PortfolioSnapshot => {
   const now = new Date().toISOString();
@@ -185,6 +198,79 @@ const BlockedAccountScreen = ({ user, language, onLogout, onRefresh }: BlockedAc
   );
 };
 
+interface BillingRequiredScreenProps {
+  user: AuthUser;
+  language: Language;
+  isLoading: boolean;
+  error: string | null;
+  onStripe: () => Promise<void>;
+  onBalance: () => Promise<void>;
+  onRefresh: () => Promise<void>;
+  onLogout: () => Promise<void>;
+}
+
+const BillingRequiredScreen = ({ user, language, isLoading, error, onStripe, onBalance, onRefresh, onLogout }: BillingRequiredScreenProps) => {
+  const isRu = language === "ru";
+  const canUseBalance = user.balanceUsd >= monthlySubscriptionPriceUsd;
+
+  return (
+    <main className="billing-required-shell">
+      <section className="billing-required-panel">
+        <div className="billing-required-head">
+          <LogoMark />
+          <div>
+            <h1>{isRu ? "Нужна подписка" : "Subscription required"}</h1>
+            <p>
+              {isRu
+                ? "Терминал активируется после месячной подписки."
+                : "The terminal unlocks after a monthly subscription."}
+            </p>
+          </div>
+        </div>
+
+        <div className="billing-price-readout">
+          <span>{isRu ? "Стоимость" : "Price"}</span>
+          <strong>$1.00 / {isRu ? "месяц" : "month"}</strong>
+        </div>
+
+        <div className="billing-balance-readout">
+          <span>{isRu ? "Внутренний баланс" : "Internal balance"}</span>
+          <strong>{formatCurrencyPrecise(user.balanceUsd)}</strong>
+        </div>
+
+        {error ? <div className="auth-error">{error}</div> : null}
+
+        <div className="billing-required-actions">
+          <button className="primary-button" disabled={!canUseBalance || isLoading} type="button" onClick={() => void onBalance()}>
+            <TerminalIcon name="credit" size={17} />
+            <span>{isRu ? "Списать $1 с баланса" : "Use $1 balance"}</span>
+          </button>
+          <button className="secondary-button" disabled={isLoading} type="button" onClick={() => void onStripe()}>
+            <TerminalIcon name="credit" size={17} />
+            <span>{isRu ? "Оформить через Stripe" : "Subscribe with Stripe"}</span>
+          </button>
+          <button className="secondary-button" disabled={isLoading} type="button" onClick={() => void onRefresh()}>
+            <TerminalIcon name="refresh" size={17} />
+            <span>{isRu ? "Проверить статус" : "Refresh status"}</span>
+          </button>
+          <button className="secondary-button" disabled={isLoading} type="button" onClick={() => void onLogout()}>
+            <TerminalIcon name="logout" size={17} />
+            <span>{isRu ? "Выйти" : "Logout"}</span>
+          </button>
+        </div>
+
+        {!canUseBalance ? (
+          <p className="billing-required-note">
+            {isRu
+              ? "На балансе меньше $1. Пополните баланс у администратора или используйте Stripe."
+              : "Balance is below $1. Add balance through an admin or use Stripe."}
+          </p>
+        ) : null}
+      </section>
+    </main>
+  );
+};
+
 export const App = () => {
   const [activeView, setActiveView] = useState<ViewId>("setup");
   const [language, setLanguage] = useState<Language>(() => (window.localStorage.getItem("qwg.language") === "en" ? "en" : "ru"));
@@ -199,9 +285,10 @@ export const App = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const t = uiText[language];
+  const hasActiveSubscription = hasBillingAccess(authUser);
 
   const loadSnapshot = useCallback(async () => {
-    if (!authUser || authUser.isBlocked || !isPortfolioReady) {
+    if (!authUser || authUser.isBlocked || !hasActiveSubscription || !isPortfolioReady) {
       setSnapshot(null);
       setIsRefreshing(false);
       return;
@@ -225,7 +312,7 @@ export const App = () => {
     } finally {
       setIsRefreshing(false);
     }
-  }, [authUser, isPortfolioReady, manualPositions]);
+  }, [authUser, hasActiveSubscription, isPortfolioReady, manualPositions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -255,7 +342,7 @@ export const App = () => {
   }, []);
 
   const loadAccountPositions = useCallback(async () => {
-    if (!authUser || authUser.isBlocked) {
+    if (!authUser || authUser.isBlocked || !hasActiveSubscription) {
       setManualPositions([]);
       setIsPortfolioReady(false);
       setSnapshot(null);
@@ -277,10 +364,10 @@ export const App = () => {
       setLoadError(error instanceof Error ? error.message : "Failed to load account assets.");
       setIsPortfolioReady(false);
     }
-  }, [authUser]);
+  }, [authUser, hasActiveSubscription]);
 
   useEffect(() => {
-    if (!authUser || authUser.isBlocked) {
+    if (!authUser || authUser.isBlocked || !hasActiveSubscription) {
       setManualPositions([]);
       setIsPortfolioReady(false);
       setSnapshot(null);
@@ -288,36 +375,7 @@ export const App = () => {
     }
 
     void loadAccountPositions();
-  }, [authUser, loadAccountPositions]);
-
-  useEffect(() => {
-    if (!authUser) {
-      return;
-    }
-
-    let isMounted = true;
-    const refreshAccountStatus = async () => {
-      try {
-        const user = await authClient.getCurrentUser();
-
-        if (isMounted) {
-          setAuthUser(user);
-        }
-      } catch {
-        if (isMounted) {
-          setAuthUser(null);
-        }
-      }
-    };
-    const intervalId = window.setInterval(() => {
-      void refreshAccountStatus();
-    }, 30000);
-
-    return () => {
-      isMounted = false;
-      window.clearInterval(intervalId);
-    };
-  }, [authUser?.id]);
+  }, [authUser, hasActiveSubscription, loadAccountPositions]);
 
   useEffect(() => {
     if (!authUser || !isPortfolioReady) {
@@ -325,11 +383,6 @@ export const App = () => {
     }
 
     void loadSnapshot();
-    const intervalId = window.setInterval(() => {
-      void loadSnapshot();
-    }, 60000);
-
-    return () => window.clearInterval(intervalId);
   }, [authUser, isPortfolioReady, loadSnapshot]);
 
   const activeTitle = useMemo(() => {
@@ -373,20 +426,37 @@ export const App = () => {
     setAuthUser(user);
   };
 
-  const hasActiveSubscription = ["active", "trialing"].includes(authUser?.billing?.status ?? "");
-
   const handleBillingAction = async () => {
     setBillingError(null);
     setIsBillingLoading(true);
 
     try {
-      if (hasActiveSubscription || authUser?.billing?.customerId) {
+      if (hasActiveSubscription && authUser?.billing?.customerId) {
         await authClient.openBillingPortal();
+      } else if (hasActiveSubscription) {
+        setBillingError("Подписка активна.");
       } else {
         await authClient.startBillingCheckout();
       }
     } catch (error) {
       setBillingError(error instanceof Error ? error.message : "Billing action failed.");
+    } finally {
+      setIsBillingLoading(false);
+    }
+  };
+
+  const handleBalanceSubscription = async () => {
+    setBillingError(null);
+    setIsBillingLoading(true);
+
+    try {
+      await authClient.startBalanceSubscription();
+      const user = await authClient.getCurrentUser();
+      setAuthUser(user);
+      setIsPortfolioReady(false);
+      setSnapshot(null);
+    } catch (error) {
+      setBillingError(error instanceof Error ? error.message : "Balance subscription failed.");
     } finally {
       setIsBillingLoading(false);
     }
@@ -414,6 +484,21 @@ export const App = () => {
 
   if (authUser.isBlocked) {
     return <BlockedAccountScreen user={authUser} language={language} onLogout={handleLogout} onRefresh={handleRefreshAccount} />;
+  }
+
+  if (!hasActiveSubscription) {
+    return (
+      <BillingRequiredScreen
+        user={authUser}
+        language={language}
+        isLoading={isBillingLoading}
+        error={billingError}
+        onStripe={handleBillingAction}
+        onBalance={handleBalanceSubscription}
+        onRefresh={handleRefreshAccount}
+        onLogout={handleLogout}
+      />
+    );
   }
 
   if (!snapshot) {
@@ -474,10 +559,10 @@ export const App = () => {
             </button>
           </div>
           <button
-            aria-label={hasActiveSubscription || authUser.billing?.customerId ? "Manage billing" : "Start billing"}
+            aria-label={hasActiveSubscription && authUser.billing?.customerId ? "Manage billing" : "Start billing"}
             className="sidebar-icon-button"
             disabled={isBillingLoading}
-            title={hasActiveSubscription || authUser.billing?.customerId ? "Billing" : "Connect billing"}
+            title={hasActiveSubscription && !authUser.billing?.customerId ? "Balance subscription active" : hasActiveSubscription ? "Billing" : "Connect billing"}
             type="button"
             onClick={() => void handleBillingAction()}
           >

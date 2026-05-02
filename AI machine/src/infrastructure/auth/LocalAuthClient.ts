@@ -136,4 +136,16 @@ export class LocalAuthClient {
 
     window.location.assign(data.url);
   }
+
+  async startBalanceSubscription(): Promise<void> {
+    const response = await fetch(buildLocalApiUrl("/billing/balance-subscription"), {
+      method: "POST",
+      credentials: "include"
+    });
+    const data = (await response.json().catch(() => ({}))) as { error?: string };
+
+    if (!response.ok) {
+      throw new Error(data.error || `Balance billing API returned ${response.status}`);
+    }
+  }
 }

@@ -129,6 +129,26 @@ const isAdminHost = (requestUrl) => {
 const isBlockedAccountAllowedPath = (pathname) =>
   pathname === "/api/auth/me" || pathname === "/api/auth/logout" || pathname === "/api/account/status";
 
+const isSubscriptionAllowedPath = (pathname) =>
+  pathname === "/api/auth/me" ||
+  pathname === "/api/auth/logout" ||
+  pathname === "/api/auth/config" ||
+  pathname === "/api/account/status" ||
+  pathname.startsWith("/api/billing/") ||
+  pathname.startsWith("/api/admin/");
+
+const hasActiveSubscription = (user) => {
+  const status = user?.billing?.status ?? "";
+
+  if (status !== "active" && status !== "trialing") {
+    return false;
+  }
+
+  const periodEnd = user?.billing?.currentPeriodEnd;
+
+  return !periodEnd || Number.isNaN(Date.parse(periodEnd)) || Date.parse(periodEnd) > Date.now();
+};
+
 const buildCoinGeckoUrl = (path, params = {}) => {
   const url = new URL(`${coingeckoBaseUrl}${path}`);
 
@@ -526,6 +546,16 @@ const routeRequest = async (request, response) => {
       });
       return;
     }
+
+    if (!session.user.isAdmin && !hasActiveSubscription(session.user) && !isSubscriptionAllowedPath(requestUrl.pathname)) {
+      sendJson(response, 402, {
+        error: "Subscription required.",
+        subscriptionRequired: true,
+        monthlyPriceUsd: 1,
+        balanceUsd: session.user.balanceUsd
+      });
+      return;
+    }
   }
 
   if (request.method === "GET" && requestUrl.pathname === "/api/account/status") {
@@ -552,6 +582,13 @@ const routeRequest = async (request, response) => {
   if (request.method === "POST" && requestUrl.pathname === "/api/billing/portal") {
     const session = await getRequestSession();
     const result = await stripeBillingService.createPortalSession(session.user.id);
+    sendJson(response, 200, result);
+    return;
+  }
+
+  if (request.method === "POST" && requestUrl.pathname === "/api/billing/balance-subscription") {
+    const session = await getRequestSession();
+    const result = await stripeBillingService.createBalanceSubscription(session.user.id);
     sendJson(response, 200, result);
     return;
   }

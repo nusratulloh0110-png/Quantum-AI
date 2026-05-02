@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 const STRIPE_API_VERSION = "2026-02-25.clover";
+const INTERNAL_MONTHLY_PRICE_USD = 1;
 
 class BillingError extends Error {
   constructor(statusCode, message) {
@@ -21,6 +22,20 @@ const toIsoFromUnix = (seconds) => {
   const value = Number(seconds ?? 0);
 
   return Number.isFinite(value) && value > 0 ? new Date(value * 1000).toISOString() : null;
+};
+
+const addDaysIso = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+const hasActiveSubscription = (user) => {
+  const status = user?.stripe_subscription_status ?? "";
+
+  if (status !== "active" && status !== "trialing") {
+    return false;
+  }
+
+  const periodEnd = user?.stripe_current_period_end;
+
+  return !periodEnd || Number.isNaN(Date.parse(periodEnd)) || Date.parse(periodEnd) > Date.now();
 };
 
 const cleanUrl = (value, fallback) => {
@@ -155,6 +170,55 @@ export const createStripeBillingService = ({ db, port }) => {
       });
 
       return { url: session.url };
+    },
+
+    async createBalanceSubscription(userId) {
+      return db.transaction(async (tx) => {
+        const userResult = await tx.query("SELECT * FROM users WHERE id = $1 LIMIT 1 FOR UPDATE", [userId]);
+        const user = userResult.rows[0];
+
+        if (!user) {
+          throw new BillingError(404, "User was not found.");
+        }
+
+        if (hasActiveSubscription(user)) {
+          return {
+            ok: true,
+            chargedUsd: 0,
+            currentPeriodEnd: user.stripe_current_period_end
+          };
+        }
+
+        const balanceUsd = Number(user.account_balance_usd ?? 0);
+
+        if (!Number.isFinite(balanceUsd) || balanceUsd < INTERNAL_MONTHLY_PRICE_USD) {
+          throw new BillingError(402, "Not enough internal balance for monthly subscription.");
+        }
+
+        const periodEnd = addDaysIso(30);
+
+        await tx.query(
+          `UPDATE users
+           SET account_balance_usd = account_balance_usd - $1,
+               stripe_subscription_id = $2,
+               stripe_subscription_status = $3,
+               stripe_price_id = $4,
+               stripe_current_period_end = $5,
+               updated_at = $6
+           WHERE id = $7`,
+          [
+            INTERNAL_MONTHLY_PRICE_USD.toFixed(2),
+            `balance-monthly-${user.id}-${Date.now()}`,
+            "active",
+            "internal_balance_monthly_1_usd",
+            periodEnd,
+            nowIso(),
+            user.id
+          ]
+        );
+
+        return { ok: true, chargedUsd: INTERNAL_MONTHLY_PRICE_USD, currentPeriodEnd: periodEnd };
+      });
     },
 
     async handleWebhook(rawBody, signature) {
