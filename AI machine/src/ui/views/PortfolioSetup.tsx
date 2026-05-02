@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Plus, Save, Trash2 } from "lucide-react";
 import type { ManualPortfolioPosition } from "../../domain/portfolio/types";
 import type { Language } from "../i18n";
 import { Badge } from "../components/Badge";
+import { TerminalIcon } from "../components/TerminalIcon";
 
 interface PortfolioSetupProps {
   language: Language;
@@ -147,7 +147,7 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
                         onClick={() => copy(draft.filter((_, rowIndex) => rowIndex !== index))}
                         disabled={isSaving}
                       >
-                        <Trash2 size={16} strokeWidth={1.5} />
+                        <TerminalIcon name="trash" size={16} />
                       </button>
                     </td>
                   </tr>
@@ -158,11 +158,11 @@ export const PortfolioSetup = ({ language, positions, onSave }: PortfolioSetupPr
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" className="secondary-button" onClick={() => copy([...draft, emptyPosition])} disabled={isSaving}>
-              <Plus size={16} strokeWidth={1.5} />
+              <TerminalIcon name="plus" size={16} />
               <span>{language === "ru" ? "Добавить актив" : "Add asset"}</span>
             </button>
             <button type="submit" className="primary-button" disabled={isSaving}>
-              <Save size={16} strokeWidth={1.5} />
+              <TerminalIcon name="save" size={16} />
               <span>{language === "ru" ? "Сохранить и обновить" : "Save and refresh"}</span>
             </button>
           </div>

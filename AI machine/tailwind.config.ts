@@ -5,16 +5,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        slateDeep: "#0F172A",
-        surface: "#F8FAFC",
-        navy: "#1E3A8A",
-        emeraldStrict: "#059669",
-        crimson: "#B91C1C",
-        borderSoft: "#E2E8F0"
+        slateDeep: "#0A0A0B",
+        surface: "#0D0D0F",
+        navy: "#E8A030",
+        emeraldStrict: "#4CAF74",
+        crimson: "#C85450",
+        borderSoft: "#1E1E22"
       },
       fontFamily: {
-        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["Geist Mono", "SFMono-Regular", "Consolas", "monospace"]
+        sans: ["DM Sans", "sans-serif"],
+        mono: ["IBM Plex Mono", "monospace"]
       }
     }
   },

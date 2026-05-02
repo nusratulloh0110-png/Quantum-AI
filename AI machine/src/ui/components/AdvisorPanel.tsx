@@ -1,11 +1,11 @@
 import { FormEvent, useState } from "react";
-import { MessageSquare, Send } from "lucide-react";
 import type { AdvisorMessage, PortfolioSnapshot } from "../../domain/portfolio/types";
 import { requestGroqAdvisorResponse } from "../../infrastructure/analytics/LocalGroqAdvisorClient";
 import { getAdvisorResponse } from "../../usecases/getAdvisorResponse";
 import { formatDateTime } from "../formatters";
 import { Badge } from "./Badge";
 import type { Language } from "../i18n";
+import { TerminalIcon } from "./TerminalIcon";
 
 interface AdvisorPanelProps {
   snapshot: PortfolioSnapshot;
@@ -115,7 +115,7 @@ export const AdvisorPanel = ({ snapshot, language }: AdvisorPanelProps) => {
           <Badge tone={providerStatus === "ok" ? "success" : providerStatus === "idle" ? "neutral" : providerStatus === "quota_exceeded" ? "warning" : "danger"}>
             {providerStatus === "idle" ? "AI" : providerStatus === "ok" ? "Groq" : providerStatus}
           </Badge>
-          <MessageSquare size={18} strokeWidth={1.5} className="text-navy" />
+          <TerminalIcon name="message" size={18} className="text-navy" />
         </div>
       </div>
 
@@ -144,7 +144,7 @@ export const AdvisorPanel = ({ snapshot, language }: AdvisorPanelProps) => {
             className="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm outline-none focus:border-navy"
           />
           <button className="icon-button" type="submit" title="Send query" aria-label="Send query" disabled={isSubmitting}>
-            <Send size={17} strokeWidth={1.5} />
+            <TerminalIcon name="send" size={17} />
           </button>
         </div>
       </form>

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BrainCircuit, CheckCircle2, LockKeyhole, Play, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import type { PortfolioSnapshot, RebalanceRecommendation } from "../../domain/portfolio/types";
 import { Badge } from "../components/Badge";
 import { ProgressBar } from "../components/ProgressBar";
+import { TerminalIcon } from "../components/TerminalIcon";
 import { formatNeutralPct } from "../formatters";
 
 type OrderStatus = "queued" | "routing" | "confirmed";
@@ -149,29 +149,29 @@ export const ExecutionDesk = ({ snapshot }: ExecutionDeskProps) => {
                 <span>Plan Confirmation</span>
                 <span className="font-mono">{progress.toFixed(0)}%</span>
               </div>
-              <ProgressBar value={progress} tone={progress === 100 ? "success" : "navy"} />
+              <ProgressBar value={progress} tone={progress === 100 ? "success" : "amber"} />
             </div>
 
             <div className="space-y-3">
               <div className="control-row">
-                <LockKeyhole size={16} strokeWidth={1.5} />
+                <TerminalIcon name="lock" size={16} />
                 <span>Exchange keys</span>
                 <Badge tone="warning">Not connected</Badge>
               </div>
               <div className="control-row">
-                <RefreshCw size={16} strokeWidth={1.5} />
+                <TerminalIcon name="refresh" size={16} />
                 <span>Quote refresh path</span>
                 <Badge tone="navy">Ready</Badge>
               </div>
               <div className="control-row">
-                <CheckCircle2 size={16} strokeWidth={1.5} />
+                <TerminalIcon name="check" size={16} />
                 <span>Risk review</span>
                 <Badge tone="success">Required</Badge>
               </div>
             </div>
 
             <button className="primary-button w-full" type="button" onClick={previewPlan} disabled={executableRecommendations.length === 0}>
-              <Play size={17} strokeWidth={1.5} />
+              <TerminalIcon name="play" size={17} />
               <span>Preview Order Route</span>
             </button>
           </div>
@@ -184,7 +184,7 @@ export const ExecutionDesk = ({ snapshot }: ExecutionDeskProps) => {
           <span>{snapshot.quantumTask.bestBitstring ? `bitstring ${snapshot.quantumTask.bestBitstring}` : "QAOA"}</span>
         </div>
         <div className="quantum-recommendation-summary">
-          <BrainCircuit size={22} strokeWidth={1.5} />
+          <TerminalIcon name="quantum" size={22} />
           <div>
             <strong>
               {strongestRecommendation
@@ -202,7 +202,7 @@ export const ExecutionDesk = ({ snapshot }: ExecutionDeskProps) => {
         <div className="quantum-recommendation-grid">
           <article className="quantum-recommendation-card quantum-recommendation-card-buy">
             <div className="quantum-recommendation-card-header">
-              <TrendingUp size={18} strokeWidth={1.5} />
+              <TerminalIcon name="trend-up" size={18} />
               <h3>BUY</h3>
               <Badge tone="success">{buyRecommendations.length}</Badge>
             </div>
@@ -225,7 +225,7 @@ export const ExecutionDesk = ({ snapshot }: ExecutionDeskProps) => {
 
           <article className="quantum-recommendation-card quantum-recommendation-card-sell">
             <div className="quantum-recommendation-card-header">
-              <TrendingDown size={18} strokeWidth={1.5} />
+              <TerminalIcon name="trend-down" size={18} />
               <h3>SELL</h3>
               <Badge tone="danger">{sellRecommendations.length}</Badge>
             </div>

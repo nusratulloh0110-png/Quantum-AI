@@ -32,29 +32,31 @@ export const EfficientFrontierChart = ({ data, targetVolatilityPct }: EfficientF
       <div className="h-72">
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 16, right: 24, bottom: 8, left: 8 }}>
-            <CartesianGrid stroke="#E2E8F0" strokeDasharray="4 4" />
+            <CartesianGrid stroke="#1E1E22" strokeDasharray="4 4" />
             <XAxis
               dataKey="volatilityPct"
-              tick={{ fontSize: 11, fill: "#64748B" }}
+              tick={{ fontSize: 11, fill: "#7A7A82", fontFamily: "IBM Plex Mono" }}
               tickLine={false}
-              axisLine={{ stroke: "#CBD5E1" }}
+              axisLine={{ stroke: "#1E1E22" }}
               unit="%"
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#64748B" }}
+              tick={{ fontSize: 11, fill: "#7A7A82", fontFamily: "IBM Plex Mono" }}
               tickLine={false}
-              axisLine={{ stroke: "#CBD5E1" }}
+              axisLine={{ stroke: "#1E1E22" }}
               unit="%"
             />
-            <Tooltip contentStyle={{ border: "1px solid #E2E8F0", borderRadius: 0, fontSize: 12 }} />
-            <Line type="monotone" dataKey="expectedReturnPct" stroke="#1E3A8A" strokeWidth={2} dot={{ r: 3 }} />
+            <Tooltip
+              contentStyle={{ background: "#0D0D0F", border: "1px solid #1E1E22", borderRadius: 0, color: "#D4CFC8", fontSize: 12 }}
+            />
+            <Line type="monotone" dataKey="expectedReturnPct" stroke="#E8A030" strokeWidth={1.5} dot={{ r: 3, fill: "#0A0A0B" }} />
             <ReferenceDot
               x={target.volatilityPct}
               y={target.expectedReturnPct}
               r={5}
-              fill="#059669"
-              stroke="#FFFFFF"
-              strokeWidth={2}
+              fill="#4CAF74"
+              stroke="#0A0A0B"
+              strokeWidth={1}
             />
           </LineChart>
         </ResponsiveContainer>

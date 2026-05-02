@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Chrome, KeyRound, Loader2, LockKeyhole, Mail, ShieldCheck, UserRound } from "lucide-react";
 import type { AuthUser, LocalAuthClient } from "../../infrastructure/auth/LocalAuthClient";
 import type { Language } from "../i18n";
+import { LogoMark, TerminalIcon } from "../components/TerminalIcon";
 
 type AuthMode = "login" | "register";
 
@@ -98,12 +98,10 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
     <main className="auth-shell">
       <section className="auth-panel" aria-label={text.titleLogin}>
         <div className="auth-brand-row">
-          <div className="brand-mark auth-brand-mark">
-            <ShieldCheck size={20} strokeWidth={1.5} />
-          </div>
+          <LogoMark />
           <div>
             <div className="auth-product-name">Quantum-AI Wealth Guardian</div>
-            <div className="auth-product-kicker">Secure Access Layer</div>
+            <div className="auth-product-kicker">Terminal Access Layer</div>
           </div>
         </div>
 
@@ -123,7 +121,7 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
             <label className="auth-field">
               <span>{text.name}</span>
               <div>
-                <UserRound size={16} strokeWidth={1.5} />
+                <TerminalIcon name="user" size={16} />
                 <input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} />
               </div>
             </label>
@@ -132,7 +130,7 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
           <label className="auth-field">
             <span>{text.email}</span>
             <div>
-              <Mail size={16} strokeWidth={1.5} />
+              <TerminalIcon name="mail" size={16} />
               <input
                 autoComplete="email"
                 inputMode="email"
@@ -147,7 +145,7 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
           <label className="auth-field">
             <span>{text.password}</span>
             <div>
-              <LockKeyhole size={16} strokeWidth={1.5} />
+              <TerminalIcon name="lock" size={16} />
               <input
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 minLength={10}
@@ -163,7 +161,7 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
           {error ? <div className="auth-error">{error}</div> : null}
 
           <button className="primary-button auth-submit" disabled={isSubmitting} type="submit">
-            {isSubmitting ? <Loader2 className="auth-spinner" size={17} strokeWidth={1.5} /> : <KeyRound size={17} strokeWidth={1.5} />}
+            <TerminalIcon name={isSubmitting ? "refresh" : "key"} className={isSubmitting ? "auth-spinner" : ""} size={17} />
             <span>{isSubmitting ? text.working : mode === "login" ? text.submitLogin : text.submitRegister}</span>
           </button>
         </form>
@@ -175,7 +173,7 @@ export const AuthScreen = ({ authClient, language, onAuthenticated }: AuthScreen
           type="button"
           onClick={() => authClient.startGoogleLogin()}
         >
-          <Chrome size={17} strokeWidth={1.5} />
+          <TerminalIcon name="google" size={17} />
           <span>{text.google}</span>
         </button>
       </section>

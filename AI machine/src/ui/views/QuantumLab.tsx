@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Binary, Cpu, Play, RotateCcw, Server, TimerReset } from "lucide-react";
 import type { PortfolioSnapshot, QuantumTask } from "../../domain/portfolio/types";
 import { getLatestQuantumOptimization, requestQuantumOptimization } from "../../infrastructure/quantum/LocalQuantumOptimizerClient";
 import type { Language } from "../i18n";
@@ -7,6 +6,7 @@ import { Badge } from "../components/Badge";
 import { CorrelationHeatmap } from "../components/CorrelationHeatmap";
 import { ProgressBar } from "../components/ProgressBar";
 import { SystemLog } from "../components/SystemLog";
+import { TerminalIcon } from "../components/TerminalIcon";
 import { formatDateTime, formatNeutralPct } from "../formatters";
 
 interface QuantumLabProps {
@@ -135,7 +135,7 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
             </div>
           </div>
           <button className="primary-button" type="button" onClick={handleRun} disabled={!canRun}>
-            {isRunning ? <RotateCcw className="spin-icon" size={17} strokeWidth={1.5} /> : <Play size={17} strokeWidth={1.5} />}
+            <TerminalIcon name={isRunning ? "refresh" : "play"} className={isRunning ? "spin-icon" : ""} size={17} />
             <span>{isRunning ? (language === "ru" ? "Расчет идет" : "Running") : language === "ru" ? "Запустить расчет" : "Run calculation"}</span>
           </button>
         </div>
@@ -154,7 +154,7 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
               </span>
               <span className="font-mono">...</span>
             </div>
-            <ProgressBar value={isLoadingSavedRun ? 38 : 72} tone="navy" />
+            <ProgressBar value={isLoadingSavedRun ? 38 : 72} tone="amber" />
           </div>
         ) : null}
       </section>
@@ -177,12 +177,12 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="stat-box">
-                    <Cpu size={16} strokeWidth={1.5} />
+                    <TerminalIcon name="cpu" size={16} />
                     <span>{language === "ru" ? "Кубиты" : "Qubits"}</span>
                     <strong>{quantumTask.qubits}</strong>
                   </div>
                   <div className="stat-box">
-                    <Server size={16} strokeWidth={1.5} />
+                    <TerminalIcon name="server" size={16} />
                     <span>Shots</span>
                     <strong>{quantumTask.shots}</strong>
                   </div>
@@ -195,24 +195,14 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
                 <h2>{language === "ru" ? "Параметры QUBO/QAOA" : "QUBO/QAOA Parameters"}</h2>
                 <span>{quantumTask.library}</span>
               </div>
-              <dl className="definition-grid">
-                <div>
-                  <dt>Energy</dt>
-                  <dd>{quantumTask.energy.toFixed(3)}</dd>
-                </div>
-                <div>
-                  <dt>Total Delta</dt>
-                  <dd>{formatNeutralPct(totalAbsoluteDelta)}</dd>
-                </div>
-                <div>
-                  <dt>Beta</dt>
-                  <dd>{quantumTask.beta.toFixed(3)}</dd>
-                </div>
-                <div>
-                  <dt>Gamma</dt>
-                  <dd>{quantumTask.gamma.toFixed(3)}</dd>
-                </div>
-              </dl>
+              <div className="qaoa-grid">
+                <div>ENERGY&nbsp;&nbsp;&nbsp;&nbsp; · {quantumTask.energy.toFixed(3)}</div>
+                <div>TOTAL Δ&nbsp;&nbsp; · {formatNeutralPct(totalAbsoluteDelta)}</div>
+                <div>BETA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; · {quantumTask.beta.toFixed(3)}</div>
+                <div>GAMMA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; · {quantumTask.gamma.toFixed(3)}</div>
+                <div>КУБИТЫ&nbsp;&nbsp;&nbsp; · {quantumTask.qubits}</div>
+                <div>SHOTS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; · {quantumTask.shots}</div>
+              </div>
             </section>
 
             <section className="panel">
@@ -222,14 +212,14 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
               </div>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start gap-3 border border-slate-200 px-3 py-3">
-                  <TimerReset size={17} strokeWidth={1.5} className="mt-0.5 text-navy" />
+                  <TerminalIcon name="timer" size={17} className="mt-0.5 text-navy" />
                   <div>
                     <div className="text-xs uppercase text-slate-500">Started</div>
                     <div className="mt-1 font-mono text-slate-950">{formatDateTime(quantumTask.startedAt)}</div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3 border border-slate-200 px-3 py-3">
-                  <TimerReset size={17} strokeWidth={1.5} className="mt-0.5 text-emeraldStrict" />
+                  <TerminalIcon name="timer" size={17} className="mt-0.5 text-emeraldStrict" />
                   <div>
                     <div className="text-xs uppercase text-slate-500">Completed</div>
                     <div className="mt-1 font-mono text-slate-950">{formatDateTime(quantumTask.completedAt)}</div>
@@ -306,7 +296,7 @@ export const QuantumLab = ({ snapshot, language }: QuantumLabProps) => {
                 {quantumDistribution.map((state, index) => (
                   <div key={`${state.bitstring}-${index}`} className="quantum-state-row">
                     <div className="flex items-center gap-2">
-                      <Binary size={15} strokeWidth={1.5} className="text-navy" />
+                      <TerminalIcon name="binary" size={15} className="text-navy" />
                       <span className="font-mono text-sm text-slate-950">{state.bitstring}</span>
                       <span className="min-w-0 truncate text-xs text-slate-500">{(state.selectedSymbols ?? []).join(", ") || "no selected assets"}</span>
                     </div>

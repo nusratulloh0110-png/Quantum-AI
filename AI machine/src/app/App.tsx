@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, Atom, Ban, BookOpen, Cloud, CreditCard, LayoutDashboard, LogOut, PlaySquare, RefreshCw, Search, ShieldCheck, SlidersHorizontal, Wallet } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import type { ManualPortfolioPosition, PortfolioSnapshot } from "../domain/portfolio/types";
 import { LocalAuthClient } from "../infrastructure/auth/LocalAuthClient";
 import type { AuthUser } from "../infrastructure/auth/LocalAuthClient";
@@ -16,9 +14,11 @@ import { AssetUniverse } from "../ui/views/AssetUniverse";
 import { PortfolioSetup } from "../ui/views/PortfolioSetup";
 import { ProductGuide } from "../ui/views/ProductGuide";
 import { QuantumLab } from "../ui/views/QuantumLab";
-import { formatCurrencyPrecise, formatDateTime } from "../ui/formatters";
+import { formatCurrencyPrecise, formatDateTime, formatPct } from "../ui/formatters";
 import type { Language } from "../ui/i18n";
 import { uiText } from "../ui/i18n";
+import { LogoMark, TerminalIcon } from "../ui/components/TerminalIcon";
+import type { TerminalIconName } from "../ui/components/TerminalIcon";
 import { appConfig } from "./config";
 
 type ViewId = "dashboard" | "quantum" | "execution" | "setup" | "universe" | "guide";
@@ -26,16 +26,16 @@ type ViewId = "dashboard" | "quantum" | "execution" | "setup" | "universe" | "gu
 interface NavItem {
   id: ViewId;
   labelKey: keyof typeof uiText.ru;
-  icon: LucideIcon;
+  icon: TerminalIconName;
 }
 
 const navItems: NavItem[] = [
-  { id: "dashboard", labelKey: "dashboard", icon: LayoutDashboard },
-  { id: "setup", labelKey: "setup", icon: SlidersHorizontal },
-  { id: "universe", labelKey: "universe", icon: Search },
-  { id: "quantum", labelKey: "quantum", icon: Atom },
-  { id: "execution", labelKey: "execution", icon: PlaySquare },
-  { id: "guide", labelKey: "guide", icon: BookOpen }
+  { id: "dashboard", labelKey: "dashboard", icon: "portfolio" },
+  { id: "setup", labelKey: "setup", icon: "assets" },
+  { id: "universe", labelKey: "universe", icon: "market" },
+  { id: "quantum", labelKey: "quantum", icon: "quantum" },
+  { id: "execution", labelKey: "execution", icon: "execution" },
+  { id: "guide", labelKey: "guide", icon: "product" }
 ];
 
 const marketDataProvider = new LocalMarketDataProvider();
@@ -106,6 +106,41 @@ const buildEmptySnapshot = (): PortfolioSnapshot => {
   };
 };
 
+const fallbackTickerAssets = [
+  { symbol: "BTC", priceUsd: 78234, dailyChangePct: 1.18 },
+  { symbol: "ETH", priceUsd: 2300, dailyChangePct: 0.72 },
+  { symbol: "SOL", priceUsd: 142.8, dailyChangePct: -0.34 },
+  { symbol: "BNB", priceUsd: 615.2, dailyChangePct: -0.59 },
+  { symbol: "XRP", priceUsd: 1.38, dailyChangePct: 0.58 }
+];
+
+const MarketTicker = ({ snapshot }: { snapshot: PortfolioSnapshot }) => {
+  const tickerAssets =
+    snapshot.assets.length > 0
+      ? snapshot.assets.map((asset) => ({
+          symbol: asset.symbol,
+          priceUsd: asset.priceUsd,
+          dailyChangePct: asset.dailyChangePct
+        }))
+      : fallbackTickerAssets;
+  const doubledAssets = [...tickerAssets, ...tickerAssets];
+
+  return (
+    <div className="market-ticker" aria-label="Live quote ticker">
+      <div className="ticker-scroll">
+        {doubledAssets.map((asset, index) => (
+          <span className="ticker-item" key={`${asset.symbol}-${index}`}>
+            <span>{asset.symbol}</span>
+            <span>·</span>
+            <span>{formatCurrencyPrecise(asset.priceUsd)}</span>
+            <span className={asset.dailyChangePct < 0 ? "ticker-negative" : "ticker-positive"}>{formatPct(asset.dailyChangePct)}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 interface BlockedAccountScreenProps {
   user: AuthUser;
   language: Language;
@@ -119,9 +154,7 @@ const BlockedAccountScreen = ({ user, language, onLogout, onRefresh }: BlockedAc
   return (
     <main className="blocked-account-shell">
       <section className="blocked-account-panel">
-        <div className="brand-mark auth-brand-mark">
-          <Ban size={20} strokeWidth={1.5} />
-        </div>
+        <LogoMark />
         <div>
           <h1>{isRu ? "Аккаунт заблокирован" : "Account blocked"}</h1>
           <p>{user.email}</p>
@@ -139,11 +172,11 @@ const BlockedAccountScreen = ({ user, language, onLogout, onRefresh }: BlockedAc
         {user.blockedReason ? <div className="blocked-account-reason">{user.blockedReason}</div> : null}
         <div className="blocked-account-actions">
           <button className="secondary-button" type="button" onClick={() => void onRefresh()}>
-            <RefreshCw size={17} strokeWidth={1.5} />
+            <TerminalIcon name="refresh" size={17} />
             <span>{isRu ? "Проверить статус" : "Refresh status"}</span>
           </button>
           <button className="secondary-button" type="button" onClick={() => void onLogout()}>
-            <LogOut size={17} strokeWidth={1.5} />
+            <TerminalIcon name="logout" size={17} />
             <span>{isRu ? "Выйти" : "Logout"}</span>
           </button>
         </div>
@@ -395,7 +428,7 @@ export const App = () => {
             <div>{language === "ru" ? "Не удалось загрузить портфель." : "Portfolio failed to load."}</div>
             <div className="mt-1 font-mono text-xs">{loadError}</div>
             <button className="secondary-button mt-4" type="button" onClick={() => void (isPortfolioReady ? loadSnapshot() : loadAccountPositions())} disabled={isRefreshing}>
-              <RefreshCw size={16} strokeWidth={1.5} />
+              <TerminalIcon name="refresh" size={16} />
               <span>{isRefreshing ? t.syncing : t.refresh}</span>
             </button>
           </div>
@@ -408,86 +441,66 @@ export const App = () => {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-mark">
-            <ShieldCheck size={19} strokeWidth={1.5} />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-white">Quantum-AI Wealth Guardian</div>
-            <div className="mt-1 font-mono text-[11px] text-slate-400">{t.terminalSubtitle}</div>
+          <LogoMark />
+          <div className="sidebar-brand-copy">
+            <div>Quantum-AI Wealth Guardian</div>
+            <span>Trading Floor Terminal</span>
           </div>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-1 border border-slate-700 p-1">
-          <button className={`language-button ${language === "ru" ? "language-button-active" : ""}`} onClick={() => handleLanguageChange("ru")} type="button">
-            RU
-          </button>
-          <button className={`language-button ${language === "en" ? "language-button-active" : ""}`} onClick={() => handleLanguageChange("en")} type="button">
-            EN
-          </button>
-        </div>
-
-        <nav className="mt-7 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.id}
-                className={`nav-item ${activeView === item.id ? "nav-item-active" : ""}`}
-                type="button"
-                onClick={() => setActiveView(item.id)}
-              >
-                <Icon size={17} strokeWidth={1.5} />
-                <span>{t[item.labelKey]}</span>
-              </button>
-            );
-          })}
+        <nav className="sidebar-nav" aria-label="Terminal navigation">
+          {navItems.map((item) => (
+            <button
+              key={item.id}
+              aria-label={t[item.labelKey]}
+              className={`nav-item ${activeView === item.id ? "nav-item-active" : ""}`}
+              title={t[item.labelKey]}
+              type="button"
+              onClick={() => setActiveView(item.id)}
+            >
+              <TerminalIcon name={item.icon} size={18} />
+              <span className="nav-label">{t[item.labelKey]}</span>
+            </button>
+          ))}
         </nav>
 
         <div className="sidebar-status">
-          <div className="sidebar-user">
-            <div>
-              <span>{language === "ru" ? "Аккаунт" : "Account"}</span>
-              <strong>{authUser.email}</strong>
-              <small>{formatCurrencyPrecise(authUser.balanceUsd)}</small>
-              <small>{authUser.billing?.status ? `Stripe: ${authUser.billing.status}` : language === "ru" ? "Stripe: не подключен" : "Stripe: not connected"}</small>
-            </div>
-            <button className="sidebar-logout" type="button" onClick={() => void handleLogout()} aria-label={language === "ru" ? "Выйти" : "Logout"}>
-              <LogOut size={15} strokeWidth={1.5} />
+          <div className="language-switch">
+            <button className={`language-button ${language === "ru" ? "language-button-active" : ""}`} onClick={() => handleLanguageChange("ru")} type="button">
+              RU
+            </button>
+            <button className={`language-button ${language === "en" ? "language-button-active" : ""}`} onClick={() => handleLanguageChange("en")} type="button">
+              EN
             </button>
           </div>
-          <button className="sidebar-billing-button" type="button" disabled={isBillingLoading} onClick={() => void handleBillingAction()}>
-            <CreditCard size={15} strokeWidth={1.5} />
-            <span>
-              {isBillingLoading
-                ? language === "ru"
-                  ? "Открытие"
-                  : "Opening"
-                : hasActiveSubscription || authUser.billing?.customerId
-                  ? language === "ru"
-                    ? "Управление оплатой"
-                    : "Manage billing"
-                  : language === "ru"
-                    ? "Подключить оплату"
-                    : "Start billing"}
-            </span>
+          <button
+            aria-label={hasActiveSubscription || authUser.billing?.customerId ? "Manage billing" : "Start billing"}
+            className="sidebar-icon-button"
+            disabled={isBillingLoading}
+            title={hasActiveSubscription || authUser.billing?.customerId ? "Billing" : "Connect billing"}
+            type="button"
+            onClick={() => void handleBillingAction()}
+          >
+            <TerminalIcon name="credit" size={17} />
+          </button>
+          <button className="sidebar-icon-button" type="button" onClick={() => void handleLogout()} aria-label={language === "ru" ? "Выйти" : "Logout"} title="Logout">
+            <TerminalIcon name="logout" size={17} />
           </button>
           {billingError ? <div className="sidebar-billing-error">{billingError}</div> : null}
-          <div className="flex items-center gap-2 text-xs text-slate-300">
-            <span className="h-2 w-2 bg-emeraldStrict" />
-            {t.localServices}
+          <div className="sidebar-live">
+            <span className="live-dot" />
+            <span>{t.localServices}</span>
           </div>
-          <div className="mt-3 font-mono text-[11px] text-slate-500">{appConfig.buildVersion}</div>
+          <div className="sidebar-build">{appConfig.buildVersion}</div>
         </div>
       </aside>
 
       <main className="main-region">
         <header className="topbar">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="topbar-copy">
+            <div className="topbar-title-row">
               <h1>{activeTitle}</h1>
-              <Badge tone="navy">{t.productStatus}</Badge>
-              <Badge tone="success">Sigma-3</Badge>
+              <Badge tone="navy">SIGMA-3</Badge>
               <Badge tone={snapshot.marketData.status === "live" ? "success" : snapshot.marketData.status === "partial" ? "warning" : "danger"}>
                 {t.prices}: {snapshot.marketData.status}
               </Badge>
@@ -503,19 +516,15 @@ export const App = () => {
           </div>
           <div className="topbar-actions">
             <div className="cloud-pill">
-              <Wallet size={15} strokeWidth={1.5} />
+              <TerminalIcon name="credit" size={15} />
               <span>{formatCurrencyPrecise(authUser.balanceUsd)}</span>
             </div>
             <div className="cloud-pill">
-              <Cloud size={15} strokeWidth={1.5} />
-              <span>{t.localQaoa}</span>
-            </div>
-            <div className="cloud-pill">
-              <Activity size={15} strokeWidth={1.5} />
-              <span>{t.groqProxy}</span>
+              <TerminalIcon name="quantum" size={15} />
+              <span>QAOA ENGINE</span>
             </div>
             <button className="cloud-pill" type="button" onClick={() => void loadSnapshot()} disabled={isRefreshing}>
-              <RefreshCw size={15} strokeWidth={1.5} />
+              <TerminalIcon name="refresh" size={15} className={isRefreshing ? "spin-icon" : ""} />
               <span>{isRefreshing ? t.syncing : t.refresh}</span>
             </button>
           </div>
@@ -532,6 +541,7 @@ export const App = () => {
       </main>
 
       <AdvisorPanel snapshot={snapshot} language={language} />
+      <MarketTicker snapshot={snapshot} />
     </div>
   );
 };

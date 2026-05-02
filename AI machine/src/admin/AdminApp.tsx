@@ -1,24 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Ban,
-  CheckCircle2,
-  DollarSign,
-  Loader2,
-  LockKeyhole,
-  LogOut,
-  RefreshCw,
-  Save,
-  Search,
-  ShieldCheck,
-  UserRoundCog,
-  Users
-} from "lucide-react";
 import { AdminClient } from "../infrastructure/admin/AdminClient";
 import type { AdminAccount, AdminStats } from "../infrastructure/admin/AdminClient";
 import { LocalAuthClient } from "../infrastructure/auth/LocalAuthClient";
 import type { AuthUser } from "../infrastructure/auth/LocalAuthClient";
 import { AuthScreen } from "../ui/views/AuthScreen";
 import { Badge } from "../ui/components/Badge";
+import { LogoMark, TerminalIcon } from "../ui/components/TerminalIcon";
 import { formatCurrencyPrecise, formatDateTime } from "../ui/formatters";
 import { appConfig } from "../app/config";
 
@@ -197,7 +184,7 @@ export const AdminApp = () => {
   if (!isAuthReady) {
     return (
       <div className="loading-screen">
-        <Loader2 className="auth-spinner text-navy" size={24} strokeWidth={1.5} />
+        <TerminalIcon name="refresh" className="auth-spinner text-navy" size={24} />
         <div className="mt-4 font-mono text-xs uppercase text-slate-500">Проверка админ-сессии</div>
       </div>
     );
@@ -211,13 +198,11 @@ export const AdminApp = () => {
     return (
       <main className="admin-access-shell">
         <section className="admin-access-panel">
-          <div className="brand-mark auth-brand-mark">
-            <LockKeyhole size={20} strokeWidth={1.5} />
-          </div>
+          <LogoMark />
           <h1>Нет доступа</h1>
           <p>{authUser.email}</p>
           <button className="secondary-button" type="button" onClick={() => void handleLogout()}>
-            <LogOut size={17} strokeWidth={1.5} />
+            <TerminalIcon name="logout" size={17} />
             <span>Выйти</span>
           </button>
         </section>
@@ -229,9 +214,7 @@ export const AdminApp = () => {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <div className="sidebar-brand">
-          <div className="brand-mark">
-            <ShieldCheck size={19} strokeWidth={1.5} />
-          </div>
+          <LogoMark />
           <div>
             <div className="text-sm font-medium text-white">Guardian Admin</div>
             <div className="mt-1 font-mono text-[11px] text-slate-400">admin domain console</div>
@@ -239,7 +222,7 @@ export const AdminApp = () => {
         </div>
 
         <div className="admin-search">
-          <Search size={16} strokeWidth={1.5} />
+          <TerminalIcon name="search" size={16} />
           <input value={query} placeholder="Поиск аккаунта" onChange={(event) => setQuery(event.target.value)} />
         </div>
 
@@ -259,7 +242,7 @@ export const AdminApp = () => {
                 <strong>{account.email}</strong>
                 <small>{formatCurrencyPrecise(account.balanceUsd)}</small>
               </span>
-              {account.isBlocked ? <Ban size={15} strokeWidth={1.5} /> : <CheckCircle2 size={15} strokeWidth={1.5} />}
+              <TerminalIcon name={account.isBlocked ? "ban" : "check"} size={15} />
             </button>
           ))}
         </div>
@@ -271,7 +254,7 @@ export const AdminApp = () => {
               <strong>{authUser.email}</strong>
             </div>
             <button className="sidebar-logout" type="button" onClick={() => void handleLogout()} aria-label="Выйти">
-              <LogOut size={15} strokeWidth={1.5} />
+              <TerminalIcon name="logout" size={15} />
             </button>
           </div>
           <div className="mt-3 font-mono text-[11px] text-slate-500">{appConfig.buildVersion}</div>
@@ -293,7 +276,7 @@ export const AdminApp = () => {
           </div>
           <div className="topbar-actions">
             <button className="cloud-pill" type="button" onClick={() => void loadAccounts()} disabled={isLoadingAccounts}>
-              <RefreshCw className={isLoadingAccounts ? "spin-icon" : ""} size={15} strokeWidth={1.5} />
+              <TerminalIcon name="refresh" className={isLoadingAccounts ? "spin-icon" : ""} size={15} />
               <span>{isLoadingAccounts ? "Обновление" : "Обновить"}</span>
             </button>
           </div>
@@ -305,25 +288,25 @@ export const AdminApp = () => {
               <div className="metric-card-label">Аккаунты</div>
               <div className="metric-card-value">{stats.totalAccounts}</div>
               <div className="metric-card-detail">Админов: {stats.adminAccounts}</div>
-              <Users className="mt-4 text-navy" size={20} strokeWidth={1.5} />
+              <TerminalIcon name="users" className="mt-4 text-navy" size={20} />
             </section>
             <section className="metric-card">
               <div className="metric-card-label">Баланс</div>
               <div className="metric-card-value">{formatCurrencyPrecise(stats.totalBalanceUsd)}</div>
               <div className="metric-card-detail">Суммарный баланс аккаунтов</div>
-              <DollarSign className="mt-4 text-emeraldStrict" size={20} strokeWidth={1.5} />
+              <TerminalIcon name="dollar" className="mt-4 text-emeraldStrict" size={20} />
             </section>
             <section className="metric-card">
               <div className="metric-card-label">Блокировки</div>
               <div className="metric-card-value">{stats.blockedAccounts}</div>
               <div className="metric-card-detail">Пользователь увидит статус в аккаунте</div>
-              <Ban className="mt-4 text-crimson" size={20} strokeWidth={1.5} />
+              <TerminalIcon name="ban" className="mt-4 text-crimson" size={20} />
             </section>
             <section className="metric-card">
               <div className="metric-card-label">Сессии</div>
               <div className="metric-card-value">{stats.activeSessions}</div>
               <div className="metric-card-detail">Неистекшие сессии</div>
-              <UserRoundCog className="mt-4 text-navy" size={20} strokeWidth={1.5} />
+              <TerminalIcon name="user" className="mt-4 text-navy" size={20} />
             </section>
           </div>
 
@@ -398,7 +381,7 @@ export const AdminApp = () => {
                 <label className="auth-field">
                   <span>Баланс, USD</span>
                   <div>
-                    <DollarSign size={16} strokeWidth={1.5} />
+                    <TerminalIcon name="dollar" size={16} />
                     <input
                       min="0"
                       step="0.01"
@@ -455,7 +438,7 @@ export const AdminApp = () => {
                 </dl>
 
                 <button className="primary-button admin-save-button" type="button" onClick={() => void handleSave()} disabled={isSaving}>
-                  {isSaving ? <Loader2 className="auth-spinner" size={17} strokeWidth={1.5} /> : <Save size={17} strokeWidth={1.5} />}
+                  <TerminalIcon name={isSaving ? "refresh" : "save"} className={isSaving ? "auth-spinner" : ""} size={17} />
                   <span>{isSaving ? "Сохранение" : "Сохранить"}</span>
                 </button>
               </section>

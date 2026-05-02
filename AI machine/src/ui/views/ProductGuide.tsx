@@ -1,6 +1,6 @@
-import { BookOpen, Cpu, Database, ShieldCheck } from "lucide-react";
 import type { Language } from "../i18n";
 import { Badge } from "../components/Badge";
+import { TerminalIcon } from "../components/TerminalIcon";
 
 interface ProductGuideProps {
   language: Language;
@@ -18,7 +18,7 @@ export const ProductGuide = ({ language }: ProductGuideProps) => {
         </div>
         <div className="guide-grid">
           <article className="guide-item">
-            <ShieldCheck size={18} strokeWidth={1.5} />
+            <TerminalIcon name="portfolio" size={18} />
             <h3>{isRu ? "Назначение" : "Purpose"}</h3>
             <p>
               {isRu
@@ -27,7 +27,7 @@ export const ProductGuide = ({ language }: ProductGuideProps) => {
             </p>
           </article>
           <article className="guide-item">
-            <Database size={18} strokeWidth={1.5} />
+            <TerminalIcon name="database" size={18} />
             <h3>{isRu ? "Данные" : "Data"}</h3>
             <p>
               {isRu
@@ -36,7 +36,7 @@ export const ProductGuide = ({ language }: ProductGuideProps) => {
             </p>
           </article>
           <article className="guide-item">
-            <Cpu size={18} strokeWidth={1.5} />
+            <TerminalIcon name="cpu" size={18} />
             <h3>{isRu ? "Квантовый расчет" : "Quantum run"}</h3>
             <p>
               {isRu
@@ -45,7 +45,7 @@ export const ProductGuide = ({ language }: ProductGuideProps) => {
             </p>
           </article>
           <article className="guide-item">
-            <BookOpen size={18} strokeWidth={1.5} />
+            <TerminalIcon name="product" size={18} />
             <h3>{isRu ? "Ограничение" : "Boundary"}</h3>
             <p>
               {isRu

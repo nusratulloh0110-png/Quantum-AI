@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Search } from "lucide-react";
 import type { CoinSearchResult, MarketDataProvider } from "../../domain/market/types";
 import { formatCurrencyPrecise, formatPct } from "../formatters";
 import { Badge } from "./Badge";
+import { TerminalIcon } from "./TerminalIcon";
 
 interface CoinSearchPanelProps {
   marketDataProvider: MarketDataProvider;
@@ -54,7 +54,7 @@ export const CoinSearchPanel = ({ marketDataProvider }: CoinSearchPanelProps) =>
           className="min-w-0 flex-1 border border-slate-300 px-3 py-2 text-sm outline-none focus:border-navy"
         />
         <button className="icon-button" type="submit" title="Search asset" aria-label="Search asset">
-          <Search size={17} strokeWidth={1.5} />
+          <TerminalIcon name="search" size={17} />
         </button>
       </form>
 

@@ -5,22 +5,23 @@ interface MetricCardProps {
   value: string;
   detail?: string;
   trend?: ReactNode;
-  tone?: "default" | "danger" | "success";
+  tone?: "default" | "danger" | "success" | "amber";
 }
 
 const toneClassName = {
-  default: "text-slate-950",
-  danger: "text-crimson",
-  success: "text-emeraldStrict"
+  default: "metric-card-default",
+  danger: "metric-card-danger",
+  success: "metric-card-success",
+  amber: "metric-card-amber"
 };
 
 export const MetricCard = ({ label, value, detail, trend, tone = "default" }: MetricCardProps) => (
-  <section className="metric-card">
-    <div className="flex items-start justify-between gap-4">
-      <span className="text-xs font-medium uppercase text-slate-500">{label}</span>
-      {trend}
+  <section className={`metric-card ${toneClassName[tone]}`}>
+    <div className="metric-card-head">
+      <span className="metric-card-label">{label}</span>
+      {trend ? <span className="metric-card-trend">{trend}</span> : null}
     </div>
-    <div className={`mt-3 font-mono text-2xl ${toneClassName[tone]}`}>{value}</div>
-    {detail ? <p className="mt-2 text-xs text-slate-500">{detail}</p> : null}
+    <div className="metric-card-value">{value}</div>
+    {detail ? <p className="metric-card-detail">{detail}</p> : null}
   </section>
 );

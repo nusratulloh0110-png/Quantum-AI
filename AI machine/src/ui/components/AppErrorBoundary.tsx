@@ -21,10 +21,10 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     if (this.state.error) {
       return (
         <div className="loading-screen px-6 text-center">
-          <div className="max-w-2xl border border-red-200 bg-white p-6 text-left">
+          <div className="error-panel">
             <div className="text-sm font-medium text-crimson">Application error</div>
             <div className="mt-2 text-sm text-slate-600">The interface caught a rendering error instead of showing a blank page.</div>
-            <pre className="mt-4 overflow-auto bg-slate-950 p-3 text-xs text-slate-100">{this.state.error.message}</pre>
+            <pre className="error-trace">{this.state.error.message}</pre>
             <button className="primary-button mt-4" type="button" onClick={() => window.location.reload()}>
               Reload
             </button>

@@ -1,50 +1,40 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { PortfolioAsset } from "../../domain/portfolio/types";
-import { formatCurrencyPrecise, formatNeutralPct } from "../formatters";
 
-const colors = ["#1E3A8A", "#0F766E", "#B91C1C", "#92400E", "#4B5563", "#059669"];
+const fallbackColors = ["#E8A030", "#5A9FD4", "#4CAF74", "#8A7FD4", "#C85450", "#7A7A82"];
+const symbolColors: Record<string, string> = {
+  BTC: "#E8A030",
+  ETH: "#5A9FD4",
+  SOL: "#4CAF74",
+  BNB: "#8A7FD4",
+  XRP: "#C85450"
+};
 
 interface AllocationChartProps {
   assets: PortfolioAsset[];
 }
 
 export const AllocationChart = ({ assets }: AllocationChartProps) => {
-  const data = assets.map((asset) => ({
-    name: asset.symbol,
-    value: asset.currentWeightPct,
-    notional: asset.amount * asset.priceUsd
-  }));
-
   return (
-    <section className="panel">
+    <section className="panel allocation-panel">
       <div className="panel-header">
         <h2>Asset Allocation</h2>
         <span>Current Weights</span>
       </div>
-      <div className="h-72">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" innerRadius={72} outerRadius={104} stroke="#FFFFFF" strokeWidth={2}>
-              {data.map((entry, index) => (
-                <Cell key={entry.name} fill={colors[index % colors.length]} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(value, name, props) => [
-                `${formatNeutralPct(Number(value))} / ${formatCurrencyPrecise(props.payload.notional)}`,
-                name
-              ]}
-              contentStyle={{ border: "1px solid #E2E8F0", borderRadius: 0, fontSize: 12 }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="allocation-list">
+        {assets.length === 0 ? <div className="empty-state">No allocation data.</div> : null}
         {assets.map((asset, index) => (
-          <div key={asset.symbol} className="flex items-center gap-2 text-xs">
-            <span className="h-2.5 w-2.5" style={{ backgroundColor: colors[index % colors.length] }} />
-            <span className="font-mono text-slate-700">{asset.symbol}</span>
-            <span className="ml-auto font-mono text-slate-500">{asset.currentWeightPct.toFixed(1)}%</span>
+          <div key={asset.symbol} className="allocation-row">
+            <span className="allocation-symbol">{asset.symbol}</span>
+            <span className="allocation-track">
+              <span
+                className="allocation-fill"
+                style={{
+                  backgroundColor: symbolColors[asset.symbol] ?? fallbackColors[index % fallbackColors.length],
+                  width: `${Math.min(Math.max(asset.currentWeightPct, 0), 100)}%`
+                }}
+              />
+            </span>
+            <span className="allocation-value">{asset.currentWeightPct.toFixed(1)}%</span>
           </div>
         ))}
       </div>

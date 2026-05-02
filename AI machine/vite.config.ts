@@ -20,8 +20,7 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          charts: ["recharts"],
-          icons: ["lucide-react"]
+          charts: ["recharts"]
         }
       }
     }
