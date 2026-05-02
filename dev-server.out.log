@@ -1,0 +1,33 @@
+
+  [32m[1mVITE[22m v6.4.2[39m  [2mready in [0m[1m288[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m21:23:32[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/components/CorrelationHeatmap.tsx, /src/styles.css[22m
+[2m22:27:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/styles.css, /src/ui/views/ExecutionDesk.tsx[22m
+[2m22:27:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/vite-env.d.ts[22m
+[2m22:27:08[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/domain/portfolio/types.ts[22m
+[2m22:27:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/styles.css[22m
+[2m22:27:59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/components/AdvisorPanel.tsx, /src/styles.css[22m
+[2m22:28:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/views/Dashboard.tsx, /src/styles.css[22m
+[2m22:28:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/views/Dashboard.tsx, /src/styles.css[22m
+[2m22:29:10[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/styles.css[22m
+[2m22:29:59[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m22:30:00[22m [36m[1m[vite][22m[39m server restarted.
+[2m22:37:46[22m [36m[1m[vite][22m[39m [32m.env.local changed, restarting server...[39m
+[2m22:37:47[22m [36m[1m[vite][22m[39m server restarted.
+[2m22:45:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/domain/market/types.ts[22m
+[2m22:45:50[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/domain/portfolio/types.ts[22m
+[2m22:46:43[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/app/App.tsx[22m
+[2m22:46:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/app/App.tsx, /src/styles.css[22m
+[2m22:47:01[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/views/Dashboard.tsx, /src/styles.css[22m
+[2m22:47:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/ui/components/AdvisorPanel.tsx[22m
+[2m22:47:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/ui/components/AdvisorPanel.tsx, /src/styles.css[22m
+[2m22:48:11[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m22:48:31[22m [36m[1m[vite][22m[39m [32m.env.local changed, restarting server...[39m
+[2m22:48:31[22m [36m[1m[vite][22m[39m server restarted.
+[2m22:48:31[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m22:48:31[22m [36m[1m[vite][22m[39m server restarted.
+[2m22:48:56[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/app/App.tsx[22m
+[2m22:49:11[22m [36m[1m[vite][22m[39m changed tsconfig file detected: C:/Users/Nusra/Desktop/AI machine/tsconfig.json - Clearing cache and forcing full-reload to ensure TypeScript is compiled with updated config values.
+[2m22:49:24[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css, /src/app/App.tsx[22m

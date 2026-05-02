@@ -1,0 +1,12 @@
+{
+  "source": "local_file",
+  "accountLabel": "Local MVP Portfolio",
+  "positions": [
+    { "symbol": "BTC", "coinGeckoId": "bitcoin", "name": "Bitcoin", "amount": 16.84 },
+    { "symbol": "ETH", "coinGeckoId": "ethereum", "name": "Ethereum", "amount": 287.4 },
+    { "symbol": "SOL", "coinGeckoId": "solana", "name": "Solana", "amount": 4920 },
+    { "symbol": "BNB", "coinGeckoId": "binancecoin", "name": "BNB", "amount": 690 },
+    { "symbol": "LINK", "coinGeckoId": "chainlink", "name": "Chainlink", "amount": 18200 },
+    { "symbol": "USDC", "coinGeckoId": "usd-coin", "name": "USD Coin", "amount": 318000 }
+  ]
+}

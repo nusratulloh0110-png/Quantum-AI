@@ -1,0 +1,67 @@
+[2m22:30:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/prices?ids=bitcoin%2Cethereum%2Csolana%2Cbinancecoin%2Cchainlink%2Cusd-coin&vs=usd[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:00[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/prices?ids=bitcoin%2Cethereum%2Csolana%2Cbinancecoin%2Cchainlink%2Cusd-coin&vs=usd[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/search?query=[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:01[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/search?query=[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:11[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/prices?ids=bitcoin%2Cethereum%2Csolana%2Cbinancecoin%2Cchainlink%2Cusd-coin&vs=usd[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:11[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/prices?ids=bitcoin%2Cethereum%2Csolana%2Cbinancecoin%2Cchainlink%2Cusd-coin&vs=usd[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:11[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/search?query=[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:11[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/market/search?query=[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:16[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:18[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:21[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:44[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:46[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:47[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:48[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:30:49[22m [31m[1m[vite][22m[39m [31mhttp proxy error: /api/analytics/gemini[39m
+Error: connect ECONNREFUSED 127.0.0.1:8787
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
+[2m22:46:43[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to load url /src/infrastructure/repositories/mockPortfolioRepository.ts (resolved id: C:/Users/Nusra/Desktop/AI machine/src/infrastructure/repositories/mockPortfolioRepository.ts) in C:/Users/Nusra/Desktop/AI machine/src/styles.css. Does the file exist?
